@@ -1,0 +1,36 @@
+/* Helen & Sons HRIS · demo profile photo controls (dark and light) */
+.photo-avatar{overflow:hidden;position:relative;flex-shrink:0;display:grid;place-items:center}
+.photo-avatar img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+#user-avatar.photo-avatar{border-radius:11px}
+.person-initials.photo-avatar{width:35px;height:35px;border-radius:10px}
+.big-avatar.photo-avatar{height:104px;width:104px;border-radius:22px;margin:0 auto 12px;font-size:32px;border:2px solid #52527d;box-shadow:0 10px 25px #12124e33}
+.employee-photo-section{display:flex;align-items:center;gap:18px;padding:17px;margin-bottom:9px;border:1px solid #404070;border-radius:14px;background:linear-gradient(125deg,#24245b,#1b1b54)}
+.employee-photo-preview{width:92px;height:92px;border-radius:18px;background:linear-gradient(145deg,#494977,#24245b);color:#dbdbe4;font-size:26px;font-weight:850;border:2px solid #52527d}
+.photo-edit-details{flex:1;min-width:0}.photo-edit-details>strong{display:block;font-size:13px;color:#ededf1}
+.photo-edit-details>p{margin:7px 0 11px!important;color:#a4a4bb!important;font-size:11px!important;line-height:1.55!important}
+.employee-photo-controls,.account-photo-controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.photo-choose-btn,.photo-remove-btn{font-size:11px;padding:9px 12px;min-height:36px;white-space:nowrap}
+.photo-choose-btn{cursor:pointer;color:#d1d1dd!important;background:#24245b!important;border-color:#494977!important}
+.photo-choose-btn:hover{background:#373769!important}
+.photo-remove-btn{border:1px solid #494977;color:#a4a4bb;background:transparent}
+.photo-remove-btn:hover:not(:disabled){border-color:#a4a4bb;color:#e4e4eb}
+.photo-help{font-size:10px;color:#9292ad;display:block;margin-top:9px;line-height:1.55}
+.photo-file-input{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;opacity:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0!important}
+.photo-file-input:focus-visible + button{outline:2px solid #9b9bb4}
+.account-photo-controls{justify-content:center;max-width:270px;margin:4px auto 18px}
+.account-photo-controls>small{font-size:10px;color:#9292ad;line-height:1.5;display:block;flex-basis:100%}
+.photo-live-note{max-width:280px;margin:4px auto 15px!important}
+html[data-theme="light"] .employee-photo-section{background:linear-gradient(125deg,#f6f6f8,#e4e4eb);border-color:#d1d1dd}
+html[data-theme="light"] .employee-photo-preview{background:linear-gradient(135deg,#d1d1dd,#b6b6c8);border-color:#b6b6c8;color:#494977}
+html[data-theme="light"] .photo-edit-details>strong{color:#24245b}
+html[data-theme="light"] .photo-edit-details>p{color:#64648b!important}
+html[data-theme="light"] .photo-choose-btn{background:#e4e4eb!important;border-color:#bfbfcf!important;color:#494977!important}
+html[data-theme="light"] .photo-choose-btn:hover{background:#d1d1dd!important}
+html[data-theme="light"] .photo-remove-btn{border-color:#d1d1dd;color:#5b5b84}
+html[data-theme="light"] .photo-remove-btn:hover:not(:disabled){color:#373769;border-color:#8989a6}
+html[data-theme="light"] .photo-help,html[data-theme="light"] .account-photo-controls>small{color:#64648b}
+html[data-theme="light"] .big-avatar.photo-avatar{border-color:#bfbfcf}
+@media(max-width:560px){.employee-photo-section{align-items:flex-start;gap:12px;padding:12px}.employee-photo-preview{width:70px;height:70px;flex-shrink:0}.photo-edit-details>strong{font-size:12px}.photo-edit-details>p{font-size:10px!important}.photo-choose-btn,.photo-remove-btn{padding:7px 9px}}
+/* Avoid intrinsic canvas image dimensions stretching the fixed-size avatar in flex/grid topbars. */
+.photo-avatar img{position:absolute;inset:0;min-width:0;min-height:0;max-width:100%;max-height:100%}
+#user-avatar.photo-avatar{width:37px;height:37px;min-width:37px;max-width:37px;min-height:37px;max-height:37px;flex:0 0 37px}

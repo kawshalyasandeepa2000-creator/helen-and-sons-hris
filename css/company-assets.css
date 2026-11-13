@@ -1,0 +1,73 @@
+/* Helen and Sons — Company Asset Register; respects navy #000040 / white themes */
+#page-assets { --asset-ink:var(--ink); }
+.asset-page-heading {gap:16px;}
+.asset-heading-actions {display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.asset-stat-grid {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px;}
+.asset-stat {position:relative;min-height:129px;padding:20px 22px;border-radius:23px;border:1px solid var(--line);background:var(--white);display:flex;flex-direction:column;gap:6px;overflow:hidden;}
+.asset-stat > span:first-child {font-size:12px;letter-spacing:.05em;text-transform:uppercase;font-weight:800;color:var(--muted)}
+.asset-stat strong {font-size:clamp(28px,3vw,42px);line-height:1.08;color:var(--ink);font-weight:800}
+.asset-stat-icon {position:absolute;right:18px;bottom:8px;font-size:43px;font-weight:500;opacity:.18;color:var(--ink)}
+.asset-inventory-panel {overflow:hidden;}
+.asset-table-heading {display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
+.asset-table-heading > div:first-child {flex:1;min-width:180px;}
+.asset-filters {display:flex;align-items:end;justify-content:flex-end;gap:10px;flex-wrap:wrap;}
+.asset-filter {display:flex;flex-direction:column;gap:5px;min-width:122px;}
+.asset-filter span {font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
+.asset-filter select,.asset-filter input {height:41px;max-width:225px;min-width:105px;border-radius:12px;padding:0 11px;border:1px solid var(--line);background:var(--white);color:var(--ink);font-family:inherit;font-size:12px;}
+.asset-search-filter {min-width:165px;}
+.asset-search-filter input {width:100%;}
+.asset-table {min-width:790px;}
+.asset-table td {vertical-align:middle;}
+.asset-main-cell {display:flex;align-items:center;gap:11px;min-width:156px;}
+.asset-name-stack {display:flex;flex-direction:column;gap:3px;}
+.asset-name-stack strong {font-size:13px;line-height:1.3;color:var(--ink);}
+.asset-name-stack small {font-size:11px;line-height:1.35;color:var(--muted);}
+.asset-type-icon {display:inline-flex;flex-shrink:0;width:41px;height:41px;align-items:center;justify-content:center;border-radius:13px;background:rgba(0,0,64,.07);border:1px solid rgba(0,0,64,.11);color:#000040;font-size:24px;font-weight:700;}
+html[data-theme="dark"] .asset-type-icon {color:#FFFFFF;background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.19);}
+.asset-type-icon.asset-type-sim{font-size:22px;}
+.asset-tag {display:inline-flex;padding:5px 8px;border:1px solid var(--line);border-radius:9px;color:var(--ink);font-size:11px;font-weight:800;letter-spacing:.015em;white-space:nowrap;}
+.asset-muted,.asset-table-small{display:block;color:var(--muted);font-size:11px;margin-top:5px;}
+.asset-identifier {font-size:12px;font-weight:750;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.asset-status-pill {display:inline-flex;padding:7px 10px;border-radius:100px;font-size:11px;font-weight:800;white-space:nowrap;background:rgba(0,0,64,.07);color:var(--ink);border:1px solid var(--line);}
+.asset-status-pill.asset-assigned {background:rgba(244,197,66,.18);border-color:rgba(188,139,25,.42);color:#85620A;}
+.asset-status-pill.asset-maintenance {background:rgba(178,107,12,.10);border-color:rgba(178,107,12,.25);color:#945700;}
+html[data-theme="dark"] .asset-status-pill.asset-assigned {background:rgba(244,197,66,.16);color:#F4C542;border-color:rgba(244,197,66,.32);}
+html[data-theme="dark"] .asset-status-pill.asset-maintenance {background:rgba(255,201,112,.12);color:#ffdca3;border-color:rgba(255,201,112,.3);}
+.asset-actions {display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.asset-actions .table-action {font-size:11px;white-space:nowrap;}
+.asset-return-action {font-weight:800;}
+.asset-help-panel {margin-top:16px;display:flex;gap:15px;align-items:flex-start;padding:18px 22px;}
+.asset-help-icon {font-size:26px;color:var(--ink)}
+.asset-help-panel strong {color:var(--ink);font-size:13px;}
+.asset-help-panel p {font-size:12px;line-height:1.6;color:var(--muted);margin:5px 0 0;}
+.asset-modal-body {width:min(820px,calc(100vw - 30px));max-height:calc(100vh - 35px);overflow-y:auto;}
+.asset-modal-info,.asset-save-help {font-size:12px;line-height:1.55;color:var(--muted);}
+.asset-save-help {border:1px dashed var(--line);border-radius:12px;padding:11px 14px;}
+.asset-field-hint {font-size:11px;color:var(--muted);display:block;margin:4px 0 0;}
+.asset-detail-modal {width:min(680px,calc(100vw - 30px));max-height:calc(100vh - 35px);overflow-y:auto;}
+.asset-detail-type {display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:4px 0 16px;margin-bottom:16px;flex-wrap:wrap;}
+.asset-detail-type > .asset-type-icon {margin-right:5px;}
+.asset-detail-type > .asset-name-stack {flex:1;}
+.asset-detail-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;}
+.asset-detail-grid > div {display:flex;flex-direction:column;gap:5px;padding:13px 15px;border:1px solid var(--line);border-radius:13px;min-width:0;}
+.asset-detail-grid small {font-size:10px;text-transform:uppercase;font-weight:800;letter-spacing:.055em;color:var(--muted);}
+.asset-detail-grid strong {font-size:13px;line-height:1.4;word-break:break-word;color:var(--ink);}
+.asset-history-title {font-size:16px;color:var(--ink);margin:25px 0 12px;}
+.asset-history-list {display:flex;flex-direction:column;gap:10px;}
+.asset-history-item {display:flex;gap:12px;border-left:1px solid var(--line);padding:4px 0 13px 14px;margin-left:6px;position:relative;}
+.asset-history-dot {position:absolute;width:11px;height:11px;border-radius:50%;left:-6px;top:5px;background:var(--ink);border:2px solid var(--white);}
+.asset-history-item > span:last-child {display:flex;flex-direction:column;gap:4px;}
+.asset-history-item strong {font-size:12px;color:var(--ink);}
+.asset-history-item small {font-size:11px;color:var(--muted);}
+.my-assets-panel {margin-top:20px;}
+.account-asset-list {display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:14px;}
+.account-asset-tile {text-align:left;font:inherit;background:var(--white);color:var(--ink);border:1px solid var(--line);padding:15px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;min-width:0;transition:transform .15s ease,border-color .15s ease;}
+.account-asset-tile:hover {transform:translateY(-2px);border-color:var(--ink);}
+.account-asset-tile > span:nth-child(2) {display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;}
+.account-asset-tile strong {font-size:12px;}
+.account-asset-tile small {font-size:11px;color:var(--muted);}
+.account-asset-arrow {font-size:18px;}
+.asset-empty-note {padding:21px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);font-size:12px;}
+@media (max-width:1150px) {.asset-table-heading {flex-direction:column;align-items:stretch;}.asset-filters {justify-content:flex-start;}}
+@media (max-width:900px) {.asset-stat-grid {grid-template-columns:repeat(2,minmax(0,1fr));}.asset-page-heading {flex-wrap:wrap;}.asset-heading-actions {width:100%;}.asset-heading-actions .btn {flex:1;}.asset-filters {width:100%;}.asset-filter {flex:1;}}
+@media (max-width:540px) {.asset-stat-grid {gap:9px;}.asset-stat{min-height:104px;padding:15px;border-radius:17px;}.asset-stat strong{font-size:29px;}.asset-stat-icon{font-size:33px;}.asset-filters {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}.asset-filter{min-width:0;}.asset-search-filter{grid-column:1/-1;}.asset-filter select,.asset-filter input{width:100%;max-width:none;}.asset-heading-actions{flex-direction:column;align-items:stretch;}.asset-detail-grid{grid-template-columns:1fr;}.asset-modal-body{padding:19px;}.account-asset-list{grid-template-columns:1fr;}}

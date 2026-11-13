@@ -1,0 +1,313 @@
+/* Helen & Sons HRIS — 2026 Studio UI
+   Inspired by the composition of the user's UI reference video:
+   light editorial canvas, rounded dashboard, narrow icon rail and pill navigation.
+   Helen & Sons navy (#000040), white and the existing company logo remain. Gold replaces the former lime accents.
+   All underlying HRIS handlers, data, permissions and screens are unchanged. */
+:root{--studio-navy:#000040;--studio-white:#ffffff;--studio-gold:#F4C542;--studio-surface:#F4F2ED;--studio-ink:#16172b;--studio-outline:#E3DFD5;--studio-muted:#686979}
+*{scrollbar-width:thin;scrollbar-color:#B8B3AA transparent}
+html{background:#EFEEE9}
+html body{font-family:Inter,"Segoe UI",Arial,sans-serif;letter-spacing:-.012em}
+html button,html input,html select,html textarea{font-family:inherit}
+html button{cursor:pointer}
+html[data-theme="light"] body{background:#EFEEE9!important;color:#000040}
+html[data-theme="dark"] body{background:#060626!important;color:#fff}
+html[data-theme="light"] .app-shell{--studio-panel:#ffffff;--studio-base:#F9F8F4;--studio-inner:#F4F2ED;--studio-foreground:#000040;--studio-softtext:#72717C;--studio-border:#E3DFD5;--studio-shadow:0 10px 24px rgba(0,0,64,.035);background:#F9F8F5!important;color:#000040}
+html[data-theme="dark"] .app-shell{--studio-panel:#14143f;--studio-base:#0c0c2f;--studio-inner:#1b1b4e;--studio-foreground:#ffffff;--studio-softtext:#b7bbcb;--studio-border:#333357;--studio-shadow:0 10px 24px rgba(0,0,20,.11);background:#0d0d31!important;color:white}
+html .app-shell{display:flex;max-width:1630px;min-height:calc(100vh - 48px);margin:24px auto;border:8px solid rgba(255,255,255,.94);border-radius:32px;box-shadow:0 30px 95px rgba(0,0,30,.13);overflow:clip;position:relative;align-items:stretch}
+html[data-theme="dark"] .app-shell{border-color:#282850}
+/* Compact vertical icon rail like the video. */
+html .sidebar{position:sticky!important;top:0!important;left:auto!important;bottom:auto!important;width:76px!important;flex:0 0 76px;height:calc(100vh - 64px);min-height:660px;margin:0;padding:18px 10px 14px!important;display:flex;align-items:center;background:#000040!important;box-shadow:none!important;border:0!important;border-radius:0;z-index:10;overflow:visible}
+html .brand-logo.side{margin:0 0 35px!important;padding:0!important;display:flex;align-items:center;justify-content:center;min-height:53px;width:100%}
+html .brand-logo.side .side-logo{width:50px!important;height:50px!important;object-fit:contain!important;filter:none!important}
+html .brand-logo.side .brand-wordmark,html .sidebar .side-group-label,html .sidebar .side-hint{display:none!important}
+html .side-nav{width:100%;display:flex;flex-direction:column;gap:11px;align-items:center}
+html .sidebar .nav-item{position:relative;display:flex;justify-content:center;align-items:center;width:50px;height:50px;min-height:50px!important;flex:0 0 auto;padding:0!important;font-size:0!important;color:#b9bfd1!important;border:1px solid transparent!important;border-radius:16px!important;background:transparent!important;box-shadow:none!important;transition:background .18s ease,color .18s ease,transform .18s ease}
+html .sidebar .nav-item:hover{color:#fff!important;background:rgba(255,255,255,.13)!important;transform:translateY(-1px)}
+html .sidebar .nav-item.active{color:#000040!important;background:#F4C542!important;border-color:#F4C542!important;box-shadow:none!important}
+html .sidebar .nav-icon{width:23px;height:23px;margin:0;display:block;font-size:0!important;line-height:0}
+html .sidebar .nav-icon svg{width:23px;height:23px;stroke:currentColor;fill:none}
+html .sidebar .nav-count{position:absolute;right:-6px;top:-6px;background:#F4C542!important;color:#000040!important;border:2px solid #000040!important;min-width:18px;height:18px;font-size:9px!important;padding:2px 4px;border-radius:10px}
+html .sidebar-bottom{width:100%;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:end;margin-top:auto}
+html .rail-profile-shortcut{width:48px;height:48px;border:2px solid rgba(255,255,255,.7);border-radius:16px;background:#e9f08b;color:#000040;font-size:14px;font-weight:900;display:grid;place-items:center}
+html .sidebar-bottom .logout-btn{display:grid!important;place-items:center;width:48px;height:44px;padding:0!important;background:transparent!important;color:#d3d7e2!important;font-size:0!important;border-radius:12px;text-align:center}
+html .sidebar-bottom .logout-btn:hover{background:rgba(255,255,255,.13)!important}
+html .sidebar-bottom .logout-btn span{font-size:24px!important;margin:0!important}
+html .workspace{flex:1!important;margin:0!important;min-width:0;min-height:calc(100vh - 64px);background:var(--studio-base)!important}
+/* Small top utility header, all previous controls preserved. */
+html .topbar{height:76px!important;padding:10px 28px!important;background:var(--studio-base)!important;border-bottom:0!important;gap:18px;justify-content:space-between}
+html .breadcrumb{font-size:12px!important;font-weight:800;color:var(--studio-foreground)!important;letter-spacing:-.015em}
+html .breadcrumb span{color:#aab6ae;padding:0 7px}
+html .topbar-actions{gap:10px!important;flex-wrap:nowrap}
+html .server-state{font-size:10px!important;font-weight:800;color:var(--studio-foreground)!important;border:1px solid var(--studio-border)!important;background:var(--studio-panel)!important;border-radius:100px!important;padding:9px 12px}
+html .state-dot{background:#8aaf62!important}
+html .demo-switch-wrap{border-radius:100px;overflow:visible}
+html .demo-switch-wrap select{max-width:190px;min-height:39px;border-radius:100px!important;font-weight:700;font-size:11px;background:var(--studio-panel)!important;border:1px solid var(--studio-border)!important;color:var(--studio-foreground)!important}
+html .demo-switch-wrap label{font-size:10px!important;color:var(--studio-softtext)!important}
+html .notification-bell{border-radius:50%!important;width:39px!important;height:39px!important;background:var(--studio-panel)!important;color:var(--studio-foreground)!important;border:1px solid var(--studio-border)!important}
+html .topbar .theme-switch{padding:3px!important;border:1px solid var(--studio-border)!important;background:var(--studio-panel)!important;border-radius:100px!important}
+html .theme-option{border-radius:100px!important;font-weight:750}
+html[data-theme="light"] .topbar .theme-option.is-selected{background:#000040!important;color:white!important}
+html[data-theme="dark"] .topbar .theme-option.is-selected{background:#F4C542!important;color:#000040!important}
+html .top-user strong{color:var(--studio-foreground)!important}
+html .top-user small{color:var(--studio-softtext)!important}
+html .account-circle{background:#F4C542!important;color:#000040!important;border-radius:13px!important}
+html .separator{background:var(--studio-border)!important}
+html .mode-warning{margin:0 27px 8px!important;padding:10px 13px!important;border:1px solid var(--studio-border)!important;background:var(--studio-inner)!important;color:var(--studio-softtext)!important;border-radius:14px;line-height:1.5;font-size:10px!important;gap:10px}
+html .mode-warning strong{color:var(--studio-foreground)!important;border-color:var(--studio-border)!important;border-radius:9px}
+html .mode-warning button{color:var(--studio-foreground)!important}
+html .page-wrap{width:100%;max-width:1580px!important;margin:0!important;padding:15px 27px 40px!important}
+html .workspace-footer{background:var(--studio-base)!important;color:var(--studio-softtext)!important;border-top:1px solid var(--studio-border)!important;padding:18px 27px;font-size:11px}
+/* Video-inspired hero with display headline and lemon highlighted phrase. */
+.studio-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding:13px 6px 18px}
+.studio-micro{display:flex;align-items:center;gap:8px;color:var(--studio-foreground);font-size:10px;font-weight:850;letter-spacing:.18em;margin-bottom:13px}
+.studio-micro>span:nth-child(2){color:var(--studio-softtext);letter-spacing:.14em}
+.studio-micro-dot{background:#000040;width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 2px #F4C542}
+html[data-theme="dark"] .studio-micro-dot{background:#F4C542}
+.studio-hero h2{font-size:clamp(39px,4.1vw,65px);line-height:1.025;letter-spacing:-.08em;font-weight:650;margin:0;color:var(--studio-foreground)!important}
+.studio-asterisk{display:inline-block;transform:rotate(-12deg);font-size:.5em;line-height:1;vertical-align:10px;margin:0 6px;color:#b9c87e}
+.studio-highlight{position:relative;white-space:nowrap;z-index:0}
+.studio-highlight:after{content:"";display:block;height:26%;background:#F4C542;position:absolute;left:-2px;right:-6px;bottom:5px;z-index:-1;border-radius:12px;transform:rotate(-2deg)}
+.studio-period{color:#a0bb68}
+.studio-hero-copy>p{font-size:13px;color:var(--studio-softtext);margin:14px 0 0;font-weight:500}
+.studio-hero-right{display:flex;flex-direction:column;align-items:flex-end;gap:16px;margin:0 0 7px;flex:0 0 auto}
+.studio-edition{font-size:10px;font-weight:900;letter-spacing:.12em;color:var(--studio-softtext)}
+.studio-edition-star{display:inline-grid;place-items:center;border-radius:50%;background:#F4C542;color:#000040;width:23px;height:23px;font-size:16px;letter-spacing:0;margin:0 3px}
+.studio-create-btn{border:0;background:#000040;color:white;padding:15px 19px;border-radius:100px;font-size:12px;font-weight:700;display:flex;gap:13px;align-items:center;box-shadow:0 7px 18px rgba(0,0,64,.1)}
+.studio-create-btn:hover{background:#252562}
+.studio-plus{background:#F4C542;color:#000040;border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font-size:19px;line-height:1}
+.studio-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:10px 0 18px;max-width:100%;border-bottom:1px solid var(--studio-border);padding-bottom:15px}
+.studio-tab{border:0;border-radius:100px;background:var(--studio-panel);color:var(--studio-foreground);padding:11px 18px;font-size:11px;font-weight:800;white-space:nowrap;min-height:37px;box-shadow:0 1px 2px rgba(0,0,64,.015)}
+.studio-tab:hover{background:var(--studio-inner)}
+.studio-tab.active{background:#000040;color:white}
+html[data-theme="dark"] .studio-tab.active{background:#F4C542;color:#000040}
+/* Friendly small personalized subtitle immediately above stat cards. */
+html #page-overview .page-heading{margin:0 5px 16px!important;align-items:end!important}
+html #page-overview .page-heading .eyebrow{font-size:9px;letter-spacing:.15em;font-weight:800;color:var(--studio-softtext)!important}
+html #page-overview .page-heading h1{font-family:inherit!important;font-size:21px!important;line-height:1.3;font-weight:770!important;letter-spacing:-.04em;margin:5px 0!important;color:var(--studio-foreground)!important}
+html #page-overview .page-heading p{color:var(--studio-softtext)!important;font-size:11px!important}
+html #page-overview .reload-btn{border-radius:100px!important;padding:11px 16px!important}
+/* Reference video's softly rounded cards and striking data numbers. */
+html .panel,html .metric-card{border-radius:25px!important;box-shadow:var(--studio-shadow)!important;background:var(--studio-panel)!important;border:1px solid var(--studio-border)!important;color:var(--studio-foreground)!important}
+html .metric-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:13px!important;margin-bottom:15px!important}
+html .metric-card{min-height:226px;padding:19px 21px!important;display:flex;flex-direction:column;align-items:start;position:relative;overflow:hidden}
+html[data-theme="light"] .metric-card:nth-child(2){background:#F4C542!important;border-color:#D6A829!important}
+html[data-theme="dark"] .metric-card:nth-child(2){background:#F4C542!important;border-color:#F4C542!important;color:#000040!important}
+html .metric-card .card-symbol{border-radius:13px!important;display:grid;place-items:center;width:34px;height:34px;font-size:19px;background:var(--studio-inner)!important;color:var(--studio-foreground)!important;border:0!important;margin-bottom:17px!important}
+html .metric-card:nth-child(2) .card-symbol{color:#000040!important;background:rgba(0,0,64,.085)!important}
+html .metric-card .metric-title{font-size:12px!important;font-weight:700!important;color:var(--studio-softtext)!important;line-height:1.3}
+html .metric-card:nth-child(2) .metric-title{color:#25263e!important}
+html .metric-card>strong{font-size:clamp(36px,3.4vw,58px)!important;line-height:1.06!important;margin:10px 0 2px!important;letter-spacing:-.09em;font-weight:680!important;color:var(--studio-foreground)!important}
+html .metric-card:nth-child(2)>strong{color:#000040!important}
+html .metric-card>small{font-size:10px!important;margin:3px 0 0!important;color:var(--studio-softtext)!important}
+html .metric-card:nth-child(2)>small{color:#434b3e!important}
+.studio-card-footer{display:flex;gap:4px;align-items:flex-end;width:100%;margin-top:auto;padding-top:15px}
+.studio-card-footer span{display:block;flex:1;height:23px;border-radius:9px;background:var(--studio-inner);border:1px solid var(--studio-border)}
+.studio-card-footer span:nth-child(-n+5){background:#000040;border-color:#000040}
+html[data-theme="dark"] .metric-card:not(:nth-child(2)) .studio-card-footer span:nth-child(-n+5){background:#eceef0;border-color:#eceef0}
+html .metric-card:nth-child(2) .studio-card-footer span{background:rgba(0,0,64,.11);border-color:rgba(0,0,64,.07)}
+html .metric-card:nth-child(2) .studio-card-footer span:nth-child(-n+4){background:#000040;border-color:#000040}
+/* Shortcuts become understated metric chips under primary four cards. */
+html #page-overview .overview-action-strip{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:13px!important;margin:0 0 15px!important}
+html .overview-shortcut{background:var(--studio-panel)!important;color:var(--studio-foreground)!important;border:1px solid var(--studio-border)!important;border-radius:19px!important;padding:13px 19px!important;box-shadow:none!important}
+html .overview-shortcut .shortcut-icon{background:var(--studio-inner)!important;color:var(--studio-foreground)!important;border-radius:12px!important}
+html .overview-shortcut small{color:var(--studio-softtext)!important;letter-spacing:.07em}
+html .overview-shortcut strong{color:var(--studio-foreground)!important;font-size:19px}
+html .overview-shortcut .shortcut-arrow{color:var(--studio-softtext)!important}
+/* Split activity workspace / right-hand support rail. */
+html #page-overview .overview-middle{display:grid!important;grid-template-columns:minmax(0,1.6fr) minmax(270px,.86fr)!important;gap:14px!important;margin-bottom:15px!important;align-items:stretch}
+html #page-overview .overview-middle .terminal-panel,html #page-overview .overview-middle .workflow-panel{min-height:330px!important}
+html .terminal-panel{padding:23px 24px!important}
+html .terminal-heading{align-items:center!important}
+html .terminal-icon{width:42px!important;height:42px!important;border-radius:13px!important;background:#F4C542!important;color:#000040!important;display:grid;place-items:center}
+html .terminal-heading h2{font-size:20px!important;font-weight:750!important;letter-spacing:-.045em;color:var(--studio-foreground)!important}
+html .panel h2{font-family:inherit;font-weight:750;letter-spacing:-.035em;color:var(--studio-foreground)!important}
+html .panel p{color:var(--studio-softtext)!important}
+html .terminal-live{border-radius:100px!important;padding:7px 11px!important;background:var(--studio-inner)!important;color:var(--studio-foreground)!important;border:1px solid var(--studio-border)!important}
+html .terminal-divider{background:var(--studio-border)!important}
+html .terminal-subtitle{color:var(--studio-softtext)!important}
+html .terminal-entry{border-radius:14px!important;background:var(--studio-inner)!important;border:1px solid var(--studio-border)!important;color:var(--studio-foreground)!important}
+html .terminal-entry strong{color:var(--studio-foreground)!important}
+html .terminal-entry small{color:var(--studio-softtext)!important}
+html .terminal-footer{border-color:var(--studio-border)!important}
+html .workflow-panel{padding:24px!important}
+html .panel-kicker{font-size:10px!important;color:var(--studio-softtext)!important;letter-spacing:.12em}
+html .workflow-panel>h2{font-size:21px!important;letter-spacing:-.04em}
+html .workflow-counts{margin-top:19px!important;gap:6px!important}
+html .workflow-counts>div{border-radius:14px!important;background:var(--studio-inner)!important;border:1px solid var(--studio-border)!important;padding:10px!important}
+html .workflow-counts span{font-size:10px;color:var(--studio-softtext)!important}
+html .workflow-counts strong{color:var(--studio-foreground)!important;font-size:28px;font-weight:750}
+.studio-utility-stack{margin-top:17px;display:flex;flex-direction:column;gap:9px}
+.studio-utility-stack button{display:flex;align-items:center;gap:12px;padding:11px 10px;background:var(--studio-inner);border:0;border-radius:16px;text-align:left;width:100%;color:var(--studio-foreground)}
+.studio-utility-stack button:hover{filter:brightness(.98)}
+.studio-utility-icon{width:34px;height:34px;flex:0 0 34px;background:var(--studio-panel);border-radius:12px;display:grid;place-items:center;font-size:16px}
+.studio-utility-stack button>span:nth-child(2){min-width:0;flex:1}
+.studio-utility-stack strong{display:block;font-size:11px;line-height:1.4}
+.studio-utility-stack small{display:block;font-size:9px;color:var(--studio-softtext);margin-top:3px}
+.studio-utility-arr{align-self:flex-start;font-size:15px;color:var(--studio-foreground)}
+/* Attendance, leave, correction forms, staff directory and reports. */
+html .overview-grid{gap:14px!important;margin-bottom:15px!important}
+html .attendance-hero{padding:25px!important}
+html .attendance-hero .clock-line strong{font-size:45px!important;font-weight:660!important;letter-spacing:-.065em;color:var(--studio-foreground)!important}
+html .status-pill,html .subtle-badge,html .emp-code,html .role-pill,html .data-pill,html .leave-tag{border-radius:100px!important}
+html .punch-grid,html .attendance-strip,html .info-panel,html .info-card,html .form-hint,html .feature-note,html .leave-help{background:var(--studio-inner)!important;border-color:var(--studio-border)!important;color:var(--studio-foreground)!important;border-radius:17px!important}
+html .punch-grid strong,html .strip-times strong{color:var(--studio-foreground)!important}
+html .punch-grid span,html .strip-times span{color:var(--studio-softtext)!important}
+html .alerts-glance{padding:25px!important}
+html .alerts-glance-list{min-height:120px}
+html .data-panel{padding:23px!important}
+html .data-panel>.panel-title-row{margin-bottom:20px}
+html .recent-attendance{margin-top:14px}
+html :is(.data-panel, .form-panel, .account-card, .security-card, .approval-list,.alert-list,.report-card,.report-summary,.correction-layout) {color:var(--studio-foreground)}
+html th{color:var(--studio-softtext)!important;font-size:10px!important;border-bottom:1px solid var(--studio-border)!important}
+html td{color:var(--studio-foreground)!important;border-bottom:1px solid var(--studio-border)!important}
+html td strong{color:var(--studio-foreground)!important}
+html .person-cell .person-initials{border-radius:12px!important;background:var(--studio-inner)!important;color:var(--studio-foreground)!important}
+html .data-pill,html .status-pill,html .subtle-badge,html .role-pill,html .leave-tag,html .emp-code{border:1px solid var(--studio-border)!important;background:var(--studio-inner)!important;color:var(--studio-foreground)!important}
+html .page:not(#page-overview)>.page-heading h1{font-size:clamp(31px,3vw,44px)!important;font-family:inherit!important;font-weight:680!important;letter-spacing:-.065em!important;color:var(--studio-foreground)!important}
+html .page:not(#page-overview)>.page-heading{padding:15px 3px 5px}
+html .page-heading p,html .account-data span{color:var(--studio-softtext)!important}
+html .btn{border-radius:100px!important;font-weight:750!important;letter-spacing:-.02em;min-height:39px}
+html .btn.btn-primary,html .btn.btn-dark{background:#000040!important;color:#fff!important;border:1px solid #000040!important}
+html[data-theme="dark"] .btn.btn-primary{background:#F4C542!important;color:#000040!important;border-color:#F4C542!important}
+html .btn.btn-outline,html .btn.btn-demo{color:var(--studio-foreground)!important;background:var(--studio-panel)!important;border:1px solid var(--studio-border)!important}
+html .btn.btn-success{background:#F4C542!important;color:#000040!important;border:1px solid #F4C542!important}
+html .btn.btn-danger{border-radius:100px!important}
+html .table-action{border-radius:100px!important;background:var(--studio-inner)!important;color:var(--studio-foreground)!important;border:1px solid var(--studio-border)!important}
+html .account-data{border-color:var(--studio-border)!important}
+html .account-data>div{border-color:var(--studio-border)!important}
+html :is(.stack-form input,.stack-form textarea,.stack-form select,.filters input,.search-input){background:var(--studio-panel)!important;border:1px solid var(--studio-border)!important;color:var(--studio-foreground)!important;border-radius:13px!important;padding:12px 13px!important;outline:none}
+html :is(.stack-form input,.stack-form textarea,.stack-form select,.filters input,.search-input):focus{border-color:#7d889c!important;box-shadow:0 0 0 3px rgba(151,160,186,.14)!important}
+html .modal{border-radius:27px!important;background:var(--studio-panel)!important;border:1px solid var(--studio-border)!important;color:var(--studio-foreground)!important}
+html .modal h2{font-family:inherit!important;font-weight:700!important;letter-spacing:-.045em;color:var(--studio-foreground)!important}
+html .modal>p{color:var(--studio-softtext)!important}
+html .modal-backdrop{background:rgba(0,0,35,.73)!important}
+/* Login screen adapted to the same UI while keeping actual sign-in and demo buttons. */
+html .auth-layout{max-width:1400px;min-height:calc(100vh - 70px);margin:35px auto;overflow:hidden;border-radius:29px;box-shadow:0 25px 75px rgba(0,0,50,.14);background:#fff}
+html .auth-brand{background:#000040!important}
+html .auth-brand .brand-message h1{font-family:inherit!important;font-size:clamp(38px,4.3vw,65px)!important;letter-spacing:-.065em!important;font-weight:650!important;line-height:1.05!important}
+html .auth-brand .brand-message em{font-style:normal!important;color:#F4C542!important}
+html .auth-form-panel{background:#F9F8F5!important}
+html .auth-content{max-width:430px}
+html .auth-content h2{font-family:inherit!important;font-weight:700!important;letter-spacing:-.06em!important;color:#000040!important}
+html .auth-form-panel .btn-primary{background:#000040!important;color:white!important;border-color:#000040!important}
+html .auth-form-panel .btn-outline{background:white!important;color:#000040!important;border-color:#d3ddda!important}
+html .auth-form-panel .theme-switch{border-radius:100px!important}
+html .auth-footer{color:#686979!important}
+/* Dark theme: retains navy and white, with the same design language. */
+html[data-theme="dark"] .studio-highlight:after{opacity:.35}
+html[data-theme="dark"] .studio-create-btn{background:#F4C542;color:#000040}
+html[data-theme="dark"] .studio-create-btn:hover{background:#f4ffb0}
+html[data-theme="dark"] .studio-plus{background:#000040;color:#F4C542}
+html[data-theme="dark"] .studio-micro,html[data-theme="dark"] .studio-edition{color:#b9bfd4}
+html[data-theme="dark"] .auth-form-panel{background:#11113b!important}
+html[data-theme="dark"] .auth-content h2{color:white!important}
+html[data-theme="dark"] .auth-form-panel .btn-primary{background:#F4C542!important;color:#000040!important;border-color:#F4C542!important}
+html[data-theme="dark"] .auth-form-panel .btn-outline{background:#20204f!important;color:white!important;border-color:#35355d!important}
+html[data-theme="dark"] .auth-footer{color:#c1c4d2!important}
+/* Mobile: compact icon rail and elastic section grids. */
+@media(max-width:1360px){
+ html .topbar{padding:9px 18px!important}
+ html .page-wrap{padding:12px 20px 35px!important}
+ html .metric-card{padding:17px!important;min-height:205px}
+ html .metric-card>strong{font-size:48px!important}
+ html .studio-hero h2{font-size:52px}
+ html .topbar .demo-switch-wrap label{display:none}
+}
+@media(max-width:1100px){
+ html #page-overview .overview-middle{grid-template-columns:1fr!important}
+ html #page-overview .overview-middle .terminal-panel,html #page-overview .overview-middle .workflow-panel{min-height:0!important}
+ html .studio-utility-stack{display:grid;grid-template-columns:repeat(3,1fr)}
+ html .studio-utility-stack button{padding:11px 8px;gap:6px}
+ html .overview-tools{grid-template-columns:1fr!important}
+ html .top-user{display:none!important}
+ html .studio-hero-right{align-items:flex-end}
+}
+@media(max-width:830px){
+ html .app-shell{min-height:100vh;margin:0;border:0;border-radius:0;box-shadow:none;overflow:visible}
+ html .sidebar{height:100vh!important;min-height:100vh!important;width:65px!important;flex-basis:65px!important;padding:14px 7px!important}
+ html .sidebar .nav-item{width:45px;height:45px;min-height:45px!important;border-radius:13px!important}
+ html .sidebar .nav-icon svg{width:21px;height:21px}
+ html .sidebar .side-logo{width:44px!important;height:44px!important}
+ html .topbar{height:67px!important}
+ html .topbar .breadcrumb{display:none!important}
+ html .topbar .mobile-nav-label{display:block!important;font-size:10px;font-weight:850;letter-spacing:.08em;color:var(--studio-foreground)}
+ html .mode-warning{margin:0 14px 8px!important}
+ html .page-wrap{padding:7px 13px 25px!important}
+ html .studio-hero{align-items:flex-start}
+ html .studio-hero h2{font-size:44px}
+ html .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ html .studio-utility-stack{grid-template-columns:1fr}
+ html #page-overview .overview-action-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ html .auth-layout{margin:0!important;border-radius:0!important;min-height:100vh}
+}
+@media(max-width:620px){
+ html .sidebar{width:56px!important;flex-basis:56px!important;padding:10px 5px!important}
+ html .brand-logo.side{margin-bottom:20px!important}
+ html .brand-logo.side .side-logo{width:38px!important;height:38px!important}
+ html .sidebar .nav-item{width:42px;height:42px;min-height:42px!important}
+ html .side-nav{gap:3px}
+ html .rail-profile-shortcut{width:39px;height:39px}
+ html .sidebar-bottom .logout-btn{width:42px;height:38px}
+ html .topbar{height:auto!important;min-height:59px;padding:9px!important}
+ html .topbar-actions{gap:5px!important;margin-left:auto}
+ html .topbar .theme-option{padding:5px 6px!important;font-size:0!important}
+ html .topbar .theme-option .theme-icon{font-size:15px!important}
+ html .server-state{display:none!important}
+ html .demo-switch-wrap select{max-width:112px!important;font-size:9px!important;height:33px!important;min-height:33px!important}
+ html .notification-bell{width:32px!important;height:32px!important}
+ html .page-wrap{padding:8px 9px 25px!important}
+ html .mode-warning{margin:0 8px 6px!important;padding:8px!important;font-size:9px!important}
+ html .mode-warning button{font-size:9px}
+ html .studio-hero{padding:12px 2px 15px;flex-direction:column;gap:17px}
+ html .studio-micro{font-size:8px;letter-spacing:.1em}
+ html .studio-hero h2{font-size:clamp(28px,8.3vw,43px);letter-spacing:-.075em}
+ html .studio-hero-copy>p{font-size:11px;line-height:1.5;margin-top:9px}
+ html .studio-hero-right{width:100%;flex-direction:row;justify-content:space-between;align-items:center;margin:0}
+ html .studio-edition{font-size:8px}
+ html .studio-create-btn{font-size:9px;padding:9px 10px;gap:5px}
+ html .studio-plus{width:17px;height:17px;font-size:15px}
+ html .studio-tabs{gap:4px;padding-bottom:10px;margin:8px 0 12px}
+ html .studio-tab{padding:9px 10px!important;font-size:9px!important;min-height:30px}
+ html #page-overview .page-heading h1{font-size:17px!important}
+ html #page-overview .page-heading p{font-size:9px!important}
+ html .metric-grid{gap:8px!important}
+ html .metric-card{min-height:170px!important;padding:13px!important;border-radius:18px!important}
+ html .metric-card .card-symbol{width:29px;height:29px;margin-bottom:9px!important;font-size:15px}
+ html .metric-card>strong{font-size:39px!important}
+ html .metric-card .metric-title{font-size:10px!important}
+ html .metric-card>small{font-size:9px!important}
+ .studio-card-footer{gap:3px;padding-top:9px}
+ .studio-card-footer span{height:16px;border-radius:6px}
+ html #page-overview .overview-action-strip{grid-template-columns:1fr!important;gap:8px!important}
+ html .overview-shortcut{padding:11px!important}
+ html #page-overview .overview-middle{gap:10px!important}
+ html .panel{border-radius:19px!important}
+ html .terminal-panel,html .workflow-panel,html .attendance-hero,html .alerts-glance,html .data-panel{padding:16px!important}
+ html .workflow-counts{gap:5px!important}
+ html .workflow-counts>div{padding:9px 6px!important}
+ html .workflow-counts strong{font-size:22px}
+ html .studio-utility-stack{gap:6px}
+ html .studio-utility-stack button{padding:8px}
+ html .clock-line strong{font-size:29px!important}
+ html .punch-grid strong{font-size:17px!important}
+ html .page-heading{flex-wrap:wrap}
+ html .workspace-footer{padding:14px!important}
+}
+@media(prefers-reduced-motion:reduce){html *,html *::before,html *::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+/* Final contrast safeguards (the legacy theme stylesheet used a dark nav-icon override). */
+html[data-theme="light"] .sidebar .nav-item .nav-icon,
+html[data-theme="dark"] .sidebar .nav-item .nav-icon{color:#cdd3e0!important}
+html[data-theme="light"] .sidebar .nav-item:hover .nav-icon,
+html[data-theme="dark"] .sidebar .nav-item:hover .nav-icon{color:#fff!important}
+html[data-theme="light"] .sidebar .nav-item.active .nav-icon,
+html[data-theme="dark"] .sidebar .nav-item.active .nav-icon{color:#000040!important}
+html[data-theme="light"] #page-overview .reload-btn,
+html[data-theme="dark"] #page-overview .reload-btn{color:var(--studio-foreground)!important;background:var(--studio-panel)!important;border:1px solid var(--studio-border)!important;font-size:11px!important}
+html[data-theme="light"] .topbar .theme-option[aria-pressed="true"]{background:#000040!important;color:#fff!important}
+html[data-theme="light"] .topbar .theme-option[aria-pressed="false"]{background:transparent!important;color:#000040!important}
+html[data-theme="dark"] .topbar .theme-option[aria-pressed="true"]{background:#F4C542!important;color:#000040!important}
+html[data-theme="dark"] .topbar .theme-option[aria-pressed="false"]{background:transparent!important;color:#fff!important}
+@media(max-width:620px){
+ html .mode-warning span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45}
+ html .mode-warning{min-height:48px}
+}

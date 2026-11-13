@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#000040"><title>Helen &amp; Sons | Live Scanner Monitor</title>
+<link href="css/scanner-monitor.css" rel="stylesheet">
+</head><body>
+<header class="topbar"><div class="brand"><img src="assets/helen-and-sons-logo.png" alt="Helen &amp; Sons logo"><span>HELEN &amp; SONS<small>HRIS · LIVE FINGERPRINT EVENTS</small></span></div><a class="back" href="index.html">← Back to HRIS</a></header>
+<main class="main">
+  <section class="hero"><div><p class="eyebrow">ATTENDANCE DEVICE INTEGRATION</p><h1>Live fingerprint monitor</h1><p>Verified ZKTeco scanner events are displayed after an authorized Attendance Viewer or Administrator signs in. No fingerprint images are collected.</p></div><span class="pill" id="status">Waiting for configuration</span></section>
+  <section class="panel" id="setup"><h2>Database connection required</h2><p>Configure <code>js/config.js</code>, install <code>supabase/schema.sql</code> and <code>supabase/scanner_integration.sql</code>, then start the Windows connector.</p><button class="button secondary" id="preview-btn" type="button">View SAMPLE monitor (not real scans)</button></section>
+  <section class="panel hidden" id="login"><h2>Staff login</h2><p>Sign in using an active Supabase Administrator or Attendance Viewer account.</p><form id="login-form"><label for="email">Work email</label><input id="email" type="email" required autocomplete="username"><label for="password">Password</label><input id="password" type="password" required autocomplete="current-password"><button class="button" type="submit">Sign in to scanner monitor</button></form><p class="error" id="login-error" role="alert"></p></section>
+  <section class="hidden" id="workspace">
+   <div class="stats"><article><span>Events loaded</span><strong id="count">0</strong></article><article><span>Last scan</span><strong id="latest">—</strong></article><article><span>Unmapped scanner IDs</span><strong id="unmapped">0</strong></article></div>
+   <div class="panel" style="margin-bottom:1rem"><div class="heading"><div><h2>Today’s fingerprint attendance · provisional</h2><p>First and last scan for each scanner ID. These are NOT verified IN/OUT times until company rules are configured.</p></div></div>
+      <div class="scroll"><table><thead><tr><th>Employee / Scanner ID</th><th>First scan</th><th>Last scan</th><th>Punches</th><th>Review status</th></tr></thead><tbody id="today-events"></tbody></table></div>
+      <p class="muted">Multiple scans, missed punches, overnight shifts and duplicate device IDs need HR review. Do not use this provisional summary for payroll.</p></div>
+   <div class="panel"><div class="heading"><div><h2>Recent scanner events</h2><p>Scanner logs are not automatically classified as IN or OUT.</p></div><div class="actions"><button class="button secondary" id="reload" type="button">Refresh</button><button class="button secondary" id="logout" type="button">Sign out</button></div></div>
+      <p id="event-status" class="muted" aria-live="polite"></p>
+      <div class="scroll"><table><thead><tr><th>Employee</th><th>Scanner user ID</th><th>Scan time · GST</th><th>Source</th><th>Mapping</th></tr></thead><tbody id="events"></tbody></table></div>
+   </div>
+  </section>
+</main>
+<script defer src="js/config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="js/scanner-monitor.js"></script>
+</body></html>

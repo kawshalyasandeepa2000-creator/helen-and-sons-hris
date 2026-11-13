@@ -1,0 +1,21 @@
+/* Helen & Sons HRIS — simpler dashboard, without activity/insights charts or shift editor */
+#page-overview .dashboard-metrics { margin-bottom: 18px; }
+#page-overview .dashboard-metrics .metric-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 0; }
+#page-overview .overview-middle { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(290px, 1fr); align-items: stretch; gap: 18px; margin-bottom: 18px; }
+#page-overview .overview-middle .terminal-panel { min-height: 300px; }
+#page-overview .overview-middle .workflow-panel { display: flex; flex-direction: column; min-height: 300px; }
+#page-overview .overview-middle .workflow-panel .workflow-counts { margin-top: 28px; }
+#page-overview .overview-action-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 1050px) {
+  #page-overview .overview-middle { grid-template-columns: 1fr; gap: 14px; }
+  #page-overview .overview-middle .terminal-panel,
+  #page-overview .overview-middle .workflow-panel { min-height: 0; }
+  #page-overview .overview-middle .workflow-panel .workflow-counts { margin-top: 15px; }
+}
+@media (max-width: 780px) {
+  #page-overview .dashboard-metrics .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  #page-overview .overview-action-strip { grid-template-columns: 1fr; }
+  #page-overview .dashboard-metrics { margin-bottom: 13px; }
+}

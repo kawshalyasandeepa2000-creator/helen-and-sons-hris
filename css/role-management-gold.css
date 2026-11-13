@@ -1,0 +1,25 @@
+/* Helen & Sons HRIS — gold branding and administrator-assigned demo roles */
+:root { --hs-gold:#F4C542; --hs-gold-deep:#B98B17; }
+.role-assignment-section {display:flex;flex-direction:column;gap:9px;margin-top:5px;padding:16px 17px;border:1px solid var(--line);border-radius:15px;background:rgba(244,197,66,.075);}
+.role-assignment-section label {font-weight:800;color:var(--ink);}
+.role-assignment-section select {width:100%;border-radius:10px;border:1px solid var(--line);min-height:44px;padding:0 12px;}
+.role-assignment-help {display:block;line-height:1.55;color:var(--muted);font-size:11px;}
+.role-badge {display:inline-flex;align-items:center;gap:5px;white-space:nowrap;border-radius:100px;padding:7px 10px;border:1px solid var(--line);font-weight:800;font-size:10px;letter-spacing:.01em;color:var(--ink);background:rgba(0,0,64,.05);}
+.role-badge.role-admin {color:#000040;border-color:rgba(185,139,23,.40);background:#F9E9B0;}
+.role-badge.role-hr {background:rgba(244,197,66,.16);border-color:rgba(185,139,23,.35);}
+html[data-theme="dark"] .role-assignment-section {background:rgba(244,197,66,.075);border-color:rgba(244,197,66,.30);}
+html[data-theme="dark"] .role-badge.role-hr {color:#F4C542;}
+html[data-theme="dark"] .role-assignment-section label {color:#FFFFFF;}
+html[data-theme="dark"] .role-assignment-help {color:#CED0DC;}
+html[data-theme="dark"] .role-badge.role-employee {color:#FFFFFF;}
+#emp-role:focus-visible {outline:3px solid rgba(244,197,66,.50);outline-offset:2px;}
+/* Modal dialogs sit outside .app-shell, where --studio-* tokens were scoped.
+   Supply explicit backgrounds/colors so forms remain legible, including on phones. */
+html[data-theme="light"] .modal-backdrop .modal {background:#FFFFFF!important;color:#000040!important;border:1px solid #D9D7D0!important;}
+html[data-theme="dark"] .modal-backdrop .modal {background:#121242!important;color:#FFFFFF!important;border:1px solid #4E4E76!important;}
+html[data-theme="light"] .modal-backdrop .modal h2,
+html[data-theme="light"] .modal-backdrop .modal .eyebrow {color:#000040!important;}
+html[data-theme="dark"] .modal-backdrop .modal h2,
+html[data-theme="dark"] .modal-backdrop .modal .eyebrow {color:#FFFFFF!important;}
+html[data-theme="light"] .modal-backdrop .modal>p {color:#646576!important;}
+html[data-theme="dark"] .modal-backdrop .modal>p {color:#CCD0DF!important;}

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="#000040" name="theme-color"/>
+<meta content="Helen and Sons HRIS employee management and attendance" name="description"/>
+<title>Helen &amp; Sons | HRIS</title>
+<link href="css/style.css" rel="stylesheet"/>
+<link href="css/dark-theme.css" rel="stylesheet"/>
+<link href="css/theme-toggle.css" rel="stylesheet"/>
+<link href="css/enhancements.css" rel="stylesheet"/>
+<link href="css/profile-photos.css" rel="stylesheet"/>
+<script>
+    // Apply the saved preference before CSS renders (default: the navy/white dark theme).
+    try { document.documentElement.dataset.theme = localStorage.getItem('helen-sons-hris-studio-theme') === 'dark' ? 'dark' : 'light'; }
+    catch (_) { document.documentElement.dataset.theme = 'light'; }
+  </script>
+<link href="css/dashboard-simplified.css" rel="stylesheet"/><link href="css/brand-navy-white.css" rel="stylesheet"/><link href="css/studio-video-ui.css" rel="stylesheet"/><link href="css/classic-sidebar-cards-mobile.css" rel="stylesheet"/><link href="css/no-operations-terminal.css" rel="stylesheet"/><link href="css/one-row-dashboard-cards.css" rel="stylesheet"/><link href="css/company-assets.css" rel="stylesheet"/><link href="css/role-management-gold.css" rel="stylesheet"/><link href="css/scanner-link.css" rel="stylesheet"/></head>
+<body>
+<div aria-live="polite" class="toast" id="toast" role="status"></div>
+<main class="auth-layout" id="auth-screen">
+<section class="auth-brand">
+<div class="brand-logo large"><img alt="Helen and Sons logo" class="brand-image large-logo" src="assets/helen-and-sons-logo.png"/><span class="brand-wordmark">HELEN <span>&amp;</span> SONS<small>HUMAN RESOURCE INFORMATION SYSTEM</small></span></div>
+<div class="brand-message"><span class="eyebrow light">PEOPLE. PRESENCE. PERFORMANCE.</span><h1>A better workday<br/>starts <em>here.</em></h1><p>One secure space for your people, attendance, and everyday HR operations.</p></div>
+<div class="auth-brand-bottom"><div class="brand-bullet">01 <span>Employee directory</span></div><div class="brand-bullet">02 <span>Time, leave &amp; attendance</span></div><div class="brand-bullet">03 <span>Secure access</span></div></div>
+<div class="brand-shape shape-one"></div><div class="brand-shape shape-two"></div>
+</section>
+<section class="auth-form-panel">
+<div class="auth-theme-position">
+<div aria-label="Choose color theme" class="theme-switch" role="group">
+<button aria-pressed="true" class="theme-option" data-theme-choice="dark" title="Switch to dark mode" type="button"><span aria-hidden="true" class="theme-icon">☾</span><span>Dark</span></button>
+<button aria-pressed="false" class="theme-option" data-theme-choice="light" title="Switch to light mode" type="button"><span aria-hidden="true" class="theme-icon">☀</span><span>Light</span></button>
+</div>
+</div>
+<div class="auth-content">
+<div class="mobile-brand"><img alt="Helen and Sons logo" height="48" src="assets/helen-and-sons-logo.png" width="48"/> HELEN <span>&amp;</span> SONS</div>
+<div class="setup-alert hidden" id="setup-alert"><strong>Demo mode is ready.</strong> To use real employee accounts, add the Supabase URL and publishable key in <code>js/config.js</code>.</div>
+<div id="login-view">
+<span class="eyebrow">WELCOME TO YOUR WORKSPACE</span>
+<h2>Sign in to HRIS</h2>
+<p class="subheading">Enter your work email and password to continue.</p>
+<form class="stack-form" id="login-form">
+<label for="login-email">Email address</label>
+<input autocomplete="username" id="login-email" placeholder="you@helenandsons.com" required="" type="email"/>
+<div class="label-line"><label for="login-password">Password</label><button class="text-link" id="forgot-link" type="button">Forgot password?</button></div>
+<div class="password-field"><input autocomplete="current-password" id="login-password" placeholder="Enter your password" required="" type="password"/><button aria-label="Show password" class="password-toggle" data-toggle="login-password" type="button">Show</button></div>
+<button class="btn btn-primary full" type="submit">Sign in <span aria-hidden="true">→</span></button>
+</form>
+<div class="demo-entry" id="demo-entry"><div class="divider-word"><span>OR EXPLORE WITHOUT SETUP</span></div><div class="demo-buttons"><button class="btn btn-demo" id="demo-admin" type="button">Preview as administrator</button><button class="btn btn-outline" id="demo-employee" type="button">Preview as employee</button><button class="btn btn-outline" id="demo-hr" type="button">Preview as HR Manager</button></div><small>Demo previews do not use passwords. Admin assigns Employee, HR Manager or Administrator preview roles; only HR Manager reviews approvals. No real emails are sent.</small></div>
+</div>
+<div class="hidden" id="forgot-view">
+<button class="back-link" data-back-login="" type="button">← Back to sign in</button><span class="eyebrow">ACCOUNT RECOVERY</span><h2>Reset your password</h2><p class="subheading">We will email a secure password-reset link to your registered work address.</p>
+<form class="stack-form" id="forgot-form"><label for="forgot-email">Work email address</label><input id="forgot-email" placeholder="you@helenandsons.com" required="" type="email"/><button class="btn btn-primary full" type="submit">Email reset link →</button></form>
+</div>
+<div class="hidden" id="password-view">
+<span class="eyebrow">SECURE YOUR ACCOUNT</span><h2>Set a new password</h2><p class="subheading">Use at least 10 characters. This updates your real account when Supabase is connected.</p>
+<form class="stack-form" id="password-form"><label for="new-password">New password</label><input autocomplete="new-password" id="new-password" minlength="10" placeholder="At least 10 characters" required="" type="password"/><label for="confirm-password">Confirm password</label><input autocomplete="new-password" id="confirm-password" minlength="10" placeholder="Repeat your new password" required="" type="password"/><button class="btn btn-primary full" type="submit">Save new password →</button></form>
+</div>
+<div class="auth-footer">Helen &amp; Sons · HRIS Studio <span>Made for your team</span></div>
+</div>
+</section>
+</main>
+<div class="app-shell hidden" id="app-screen"><button aria-label="Close navigation menu" class="mobile-nav-backdrop hidden" id="mobile-nav-backdrop" type="button"></button>
+<aside aria-label="Main navigation" class="sidebar" id="main-sidebar" tabindex="-1"><div class="sidebar-mobile-heading"><span>MENU</span><button aria-label="Close navigation menu" class="mobile-menu-close" id="mobile-menu-close" type="button">✕</button></div>
+<div class="brand-logo side" title="Helen &amp; Sons HRIS"><img alt="Helen and Sons logo" class="brand-image side-logo" src="assets/helen-and-sons-logo.png"/><span class="brand-wordmark">HELEN <span>&amp;</span> SONS<small>PEOPLE &amp; ATTENDANCE</small></span></div>
+<div class="side-group-label">WORKSPACE</div>
+<nav aria-label="Main navigation" class="side-nav" id="sidebar-nav">
+<button aria-label="◫ Overview" class="nav-item active" data-page="overview" title="◫ Overview"><span class="nav-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewbox="0 0 24 24"><rect height="7" rx="1" width="7" x="3" y="3"></rect><rect height="7" rx="1" width="7" x="14" y="3"></rect><rect height="7" rx="1" width="7" x="14" y="14"></rect><rect height="7" rx="1" width="7" x="3" y="14"></rect></svg></span> Overview</button>
+<button aria-label="◷ Attendance" class="nav-item" data-page="attendance" title="◷ Attendance"><span class="nav-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span> Attendance</button>
+<button aria-label="⇄ Time corrections" class="nav-item" data-page="corrections" title="⇄ Time corrections"><span class="nav-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewbox="0 0 24 24"><path d="M7 7h14m0 0-4-4m4 4-4 4M17 17H3m0 0 4-4m-4 4 4 4"></path></svg></span> Time corrections <span class="nav-count" id="corrections-nav-count">0</span></button>
+<button aria-label="▦ Leave applications" class="nav-item" data-page="leaves" title="▦ Leave applications"><span class="nav-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewbox="0 0 24 24"><rect height="16" rx="2" width="18" x="3" y="5"></rect><path d="M16 3v4M8 3v4M3 10h18m-13 4h3"></path></svg></span> Leave applications</button>
+<button aria-label="✓ Leave approvals" class="nav-item manager-only" data-page="approvals" title="✓ Leave approvals"><span class="nav-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewbox="0 0 24 24"><path d="M8 12.5l2.5 2.5 5-6"></path><path d="M12 3l8 3v6c0 5-3.2 7.9-8 9-4.8-1.1-8-4-8-9V6l8-3z"></path></svg></span> Leave approvals <span class="nav-count" id="pending-nav-count">0</span></button>
+<button aria-label="♧ Late notifications" class="nav-item" data-page="alerts" title="♧ Late notifications"><span class="nav-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewbox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"></path></svg></span> Late notifications <span class="nav-count" id="late-nav-count">0</span></button>
+<button aria-label="♙ Employees" class="nav-item" data-page="employees" title="♙ Employees"><span class="nav-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewbox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3 20v-2c0-2.5 2.5-4 6-4s6 1.5 6 4v2z"></path><path d="M16 5a3 3 0 0 1 0 6m1 4c2.4.3 4 1.7 4 3v2"></path></svg></span> Employees</button>
+<button aria-label="Company assets" class="nav-item" data-page="assets" title="Company assets"><span class="nav-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18m-11 0v2h4v-2"></path></svg></span> Company assets</button>
+<button aria-label="▥ Reports &amp; exports" class="nav-item" data-page="reports" title="▥ Reports &amp; exports"><span class="nav-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewbox="0 0 24 24"><rect height="18" rx="2" width="16" x="4" y="3"></rect><path d="M8 16v-4m4 4V8m4 8v-6"></path></svg></span> Reports &amp; exports</button>
+<button aria-label="⚙ My account" class="nav-item" data-page="account" title="⚙ My account"><span class="nav-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewbox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06-2 2-.06-.06A1.65 1.65 0 0 0 16 18.5a1.65 1.65 0 0 0-1 1.5V20h-3.9v-.1A1.65 1.65 0 0 0 9.5 18.5a1.65 1.65 0 0 0-1.82.33l-.06.06-2-2 .06-.06A1.65 1.65 0 0 0 6 15a1.65 1.65 0 0 0-1.5-1H4v-3.9h.5A1.65 1.65 0 0 0 6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06 2-2 .06.06A1.65 1.65 0 0 0 9.5 5.5a1.65 1.65 0 0 0 1-1.5V4H14v.5A1.65 1.65 0 0 0 15 6a1.65 1.65 0 0 0 1.82-.33l.06-.06 2 2-.06.06A1.65 1.65 0 0 0 18.5 9a1.65 1.65 0 0 0 1.5 1h.5v4H20a1.65 1.65 0 0 0-.6 1z"></path></svg></span> My account</button>
+</nav>
+<div class="sidebar-bottom"><div class="mobile-demo-switch" id="mobile-demo-switch-wrap"><label for="mobile-demo-user-switch">PREVIEW AS (DEMO)</label><select aria-label="Switch demo user on mobile" id="mobile-demo-user-switch"></select></div><div class="side-hint"><span class="hint-icon">◈</span><div><strong>Helen &amp; Sons HRIS</strong><small>Demo · workforce operations</small></div></div><button class="logout-btn" id="logout-btn" type="button"><span>⇥</span> Sign out</button></div>
+</aside>
+<div class="workspace">
+<header class="topbar"><button aria-controls="main-sidebar" aria-expanded="false" aria-label="Open navigation menu" class="mobile-menu-toggle" id="mobile-menu-toggle" type="button">☰</button><div class="mobile-nav-label">HELEN &amp; SONS</div><div class="breadcrumb" id="breadcrumb">Workspace <span>/</span> Overview</div><div class="topbar-actions"><span class="server-state" id="connection-indicator"><span class="state-dot"></span> Demo preview</span><div class="demo-switch-wrap hidden" id="demo-switch-wrap"><label for="demo-user-switch">Preview as</label><select aria-label="Switch demo user" id="demo-user-switch"><option value="demo-admin">Administrator</option><option value="demo-e1">Ayesha (Employee)</option><option value="demo-e3">Sarah (HR Manager)</option><option value="demo-e2">Rizwan (Employee)</option></select></div><button aria-label="Open HR Manager leave approval notifications" class="notification-bell hidden" id="top-leave-btn" title="HR Manager leave requests" type="button">✉ <span class="bell-count hidden" id="top-leave-count">0</span></button><button aria-label="View attendance notifications" class="notification-bell" id="top-alert-btn" title="View late attendance alerts" type="button">♧ <span class="bell-count hidden" id="top-alert-count">0</span></button><span class="separator"></span><div class="account-circle" id="user-avatar">HS</div><div class="top-user"><strong id="top-user-name">Administrator</strong><small id="top-user-role">Admin</small></div><div aria-label="Choose color theme" class="theme-switch" role="group">
+<button aria-pressed="true" class="theme-option" data-theme-choice="dark" title="Switch to dark mode" type="button"><span aria-hidden="true" class="theme-icon">☾</span><span>Dark</span></button>
+<button aria-pressed="false" class="theme-option" data-theme-choice="light" title="Switch to light mode" type="button"><span aria-hidden="true" class="theme-icon">☀</span><span>Light</span></button>
+</div></div></header>
+<div class="mode-warning hidden" id="mode-warning"><strong>DEMO PREVIEW</strong><span>Employee profiles, attendance corrections, leave requests, and approvals are stored in this browser only. This is not a shared or secure production HR database.</span><button id="demo-reset-btn" type="button">Reset demo</button></div>
+<div class="page-wrap">
+<section class="page" id="page-overview">
+<div class="studio-hero">
+<div class="studio-hero-copy">
+<div class="studio-micro"><span class="studio-micro-dot"></span> HELEN &amp; SONS <span> / PEOPLE OPERATIONS</span></div>
+<h2>Managing <span aria-hidden="true" class="studio-asterisk">✳</span> your team<br/>and <span class="studio-highlight">workflows</span><span class="studio-period">.</span></h2>
+<p>A thoughtful space for your people, leave requests and everyday HR.</p>
+</div>
+<div class="studio-hero-right"><span class="studio-edition">HRIS STUDIO <span class="studio-edition-star">✳</span> 2026</span><button class="studio-create-btn" data-page="leaves" type="button"><span class="studio-plus">＋</span> New leave request <span aria-hidden="true">↗</span></button></div>
+</div>
+<div aria-label="Quick navigation" class="studio-tabs">
+<button class="studio-tab active" data-page="overview" type="button">Overview</button>
+<button class="studio-tab" data-page="attendance" type="button">Attendance</button>
+<button class="studio-tab" data-page="employees" type="button">Our team</button>
+<button class="studio-tab" data-page="leaves" type="button">Leave requests</button>
+<button class="studio-tab manager-only" data-page="approvals" type="button">Approvals</button>
+<button class="studio-tab" data-page="reports" type="button">Reports</button>
+</div>
+<div class="page-heading"><div><span class="eyebrow">YOUR PEOPLE, AT A GLANCE</span><h1 id="greeting">Good morning</h1><p id="today-subtitle">Here is today's HR overview.</p></div><button class="btn btn-outline reload-btn" data-refresh="">↻ Refresh</button></div>
+<div class="overview-action-strip">
+<button class="overview-shortcut" data-page="corrections" type="button"><span class="shortcut-icon">⇄</span><span><small>PENDING TIME CORRECTIONS</small><strong id="metric-corrections">0</strong></span><span class="shortcut-arrow">↗</span></button>
+<button class="overview-shortcut" data-page="leaves" type="button"><span class="shortcut-icon">▦</span><span><small>ANNUAL LEAVE REMAINING</small><strong id="metric-leave-balance">—</strong></span><span class="shortcut-arrow">↗</span></button>
+</div>
+<div class="dashboard-metrics"><div class="metric-grid">
+<button aria-label="View employee profiles" class="metric-card metric-warm metric-link" data-page="employees" title="View employee profiles" type="button"><span class="card-symbol">✧</span><span class="metric-title">Total employees</span><strong id="metric-total">0</strong><small>Active team members</small><span aria-hidden="true" class="studio-card-footer"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span><span aria-hidden="true" class="metric-open">↗</span></button>
+<button aria-label="View today’s clocked-in attendance" class="metric-card metric-teal metric-link" data-page="attendance" title="View today’s clocked-in attendance" type="button"><span class="card-symbol">✦</span><span class="metric-title">Clocked IN today</span><strong id="metric-in">0</strong><small>Currently on duty</small><span aria-hidden="true" class="studio-card-footer"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span><span aria-hidden="true" class="metric-open">↗</span></button>
+<button aria-label="View today’s late check-in notifications" class="metric-card metric-violet metric-link" data-page="alerts" title="View today’s late check-in notifications" type="button"><span class="card-symbol">◇</span><span class="metric-title">Late check-ins</span><strong id="metric-late">0</strong><small>After the grace period</small><span aria-hidden="true" class="studio-card-footer"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span><span aria-hidden="true" class="metric-open">↗</span></button>
+<button aria-label="View pending leave requests" class="metric-card metric-deep metric-link" data-page="leaves" title="View pending leave requests" type="button"><span class="card-symbol">✓</span><span class="metric-title">Pending leave</span><strong id="metric-pending">0</strong><small id="metric-pending-caption">Awaiting HR Manager decision</small><span aria-hidden="true" class="studio-card-footer"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span><span aria-hidden="true" class="metric-open">↗</span></button>
+</div></div><div class="overview-middle"><div class="panel workflow-panel"><span class="panel-kicker">WORKFLOW AT A GLANCE</span><h2>Leave application pipeline</h2><p>Current status of submitted requests</p><div class="workflow-counts"><div><span>Pending</span><strong id="workflow-pending">0</strong></div><div><span>Approved</span><strong id="workflow-approved">0</strong></div><div><span>Rejected</span><strong id="workflow-rejected">0</strong></div></div><div class="studio-utility-stack">
+<button data-page="employees" type="button"><span class="studio-utility-icon">◎</span><span><strong>People directory</strong><small>Employee profiles and teams</small></span><span class="studio-utility-arr">↗</span></button>
+<button data-page="leaves" type="button"><span class="studio-utility-icon">▦</span><span><strong>Leave workspace</strong><small>Apply and track your requests</small></span><span class="studio-utility-arr">↗</span></button>
+<button data-page="assets" type="button"><span class="studio-utility-icon">▣</span><span><strong>Company assets</strong><small>Phones, SIM cards and laptops</small></span><span class="studio-utility-arr">↗</span></button>
+<button data-page="reports" type="button"><span class="studio-utility-icon">▥</span><span><strong>Reports and exports</strong><small>Review and download your data</small></span><span class="studio-utility-arr">↗</span></button>
+</div></div></div>
+<div class="overview-grid overview-tools">
+<div class="panel attendance-hero"><div class="panel-eyebrow">YOUR ATTENDANCE TODAY</div><div class="attendance-hero-top"><div><h2>Clock IN / Clock OUT</h2><p>Recorded in Gulf Standard Time (GST · UTC+4)</p></div><span class="status-pill status-not-in" id="my-status-pill">NOT CLOCKED IN</span></div>
+<div class="clock-line"><strong id="live-clock">--:--:--</strong><span id="clock-date">--</span></div>
+<div class="punch-grid"><div><span>IN TIME</span><strong id="my-in-time">--:--</strong></div><div><span>OUT TIME</span><strong id="my-out-time">--:--</strong></div><div><span>HOURS WORKED</span><strong id="my-hours">—</strong></div></div>
+<div class="clock-actions"><button class="btn btn-success" id="clock-in-btn" type="button">↗ CLOCK IN</button><button class="btn btn-dark" id="clock-out-btn" type="button">↘ CLOCK OUT</button></div>
+<div class="tiny-info" id="punch-help">Clock-in and clock-out times are generated automatically.</div>
+</div>
+<div class="panel alerts-glance"><div class="panel-title-row"><div><span class="panel-kicker">ATTENDANCE ALERTS</span><h2>Late attendance notifications</h2><p>Late check-ins based on employee attendance rules</p></div><span class="subtle-badge" id="alerts-glance-count">0 alerts</span></div><div class="alerts-glance-list" id="alerts-glance-list"></div><button class="btn btn-outline full" data-page="alerts" type="button">Open attendance alerts →</button></div>
+</div>
+<div class="panel data-panel recent-attendance"><div class="panel-title-row"><div><h2>Today's attendance</h2><p>IN and OUT times for your visible team</p></div><button class="text-link" data-page="attendance" type="button">View attendance log →</button></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>IN TIME</th><th>OUT TIME</th><th>STATUS</th></tr></thead><tbody id="overview-attendance-body"></tbody></table></div></div>
+</section>
+<section class="page hidden" id="page-attendance"><div class="page-heading"><div><span class="eyebrow">WORKFORCE TRACKING</span><h1>Attendance</h1><p>Clearly recorded clock-in and clock-out times.</p></div><button class="btn btn-outline reload-btn" data-refresh="">↻ Refresh</button></div>
+<div class="scanner-link-panel"><span>FINGERPRINT ATTENDANCE</span><strong>Live ZKTeco scan monitor</strong><p>Read-only synchronized scan events (requires secure Supabase sign-in and an office connector).</p><a class="btn btn-outline" href="fingerprint-live.html">Open live scanner monitor →</a></div><div class="panel attendance-strip"><div><span class="eyebrow">TODAY'S STATUS</span><h2 id="attendance-status-heading">Not clocked in</h2><p id="attendance-status-desc">Your daily attendance is waiting to be recorded.</p></div><div class="strip-times"><div><span>IN TIME</span><strong id="attendance-in">--:--</strong></div><div><span>OUT TIME</span><strong id="attendance-out">--:--</strong></div></div></div>
+<div class="panel data-panel"><div class="panel-title-row"><div><h2>Attendance log</h2><p id="attendance-count-caption">Your recorded shifts</p></div><button class="btn btn-outline" data-page="corrections" type="button">⇄ Request correction</button><div class="filters"><label for="attendance-date">Date</label><input id="attendance-date" type="date"/></div><div class="attendance-view-filter"><label for="attendance-view-select">Show</label><select id="attendance-view-select"><option value="all">All records</option><option value="in">Currently IN</option><option value="out">Clocked OUT</option></select></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>DATE</th><th>IN TIME</th><th>OUT TIME</th><th>HOURS</th><th>STATUS</th><th>CORRECTION</th></tr></thead><tbody id="attendance-body"></tbody></table></div></div>
+</section>
+<section class="page hidden" id="page-leaves">
+<div class="page-heading"><div><span class="eyebrow">TIME OFF &amp; WELLBEING</span><h1>Leave applications</h1><p>Request leave and follow every approval decision.</p></div><span class="subtle-badge">HR Manager review</span></div>
+<div class="feature-note hidden" id="leaves-demo-note">Leave workflows are available in the browser demo. Connected database leave support will be added separately.</div>
+<div class="leave-layout">
+<div class="panel form-panel"><span class="panel-kicker">NEW APPLICATION</span><h2>Apply for leave</h2><p>Send a request directly to the HR Manager approval inbox.</p>
+<form class="stack-form" id="leave-form"><label for="leave-type">Leave type</label><select id="leave-type" required=""><option value="Annual leave">Annual leave</option><option value="Sick leave">Sick leave</option><option value="Emergency leave">Emergency leave</option><option value="Unpaid leave">Unpaid leave</option></select><div class="form-row"><div><label for="leave-start">Start date</label><input id="leave-start" required="" type="date"/></div><div><label for="leave-end">End date</label><input id="leave-end" required="" type="date"/></div></div><label for="leave-reason">Reason / explanation</label><textarea id="leave-reason" maxlength="500" placeholder="Briefly explain your leave request..." required="" rows="4"></textarea><div class="form-hint" id="leave-days-preview">Select dates to calculate the total days.</div><button class="btn btn-primary full" type="submit">Submit leave application ↗</button></form>
+</div>
+<div class="panel leave-side-panel"><span class="panel-kicker">MY LEAVE OVERVIEW</span><h2>Your requests</h2><p>Track pending and completed decisions.</p><div class="leave-summary-grid"><div><span>Submitted</span><strong id="my-leave-total">0</strong></div><div><span>Pending</span><strong id="my-leave-pending">0</strong></div><div><span>Approved</span><strong id="my-leave-approved">0</strong></div></div><div class="leave-balance-grid"><div><span>ANNUAL BALANCE</span><strong id="leave-annual-balance">—</strong><small id="leave-annual-breakdown">—</small></div><div><span>SICK BALANCE</span><strong id="leave-sick-balance">—</strong><small id="leave-sick-breakdown">—</small></div></div><p class="policy-caveat">Demo allowances count calendar days; weekends and public holidays are not excluded. Confirm your company leave rules before real use.</p><div class="leave-help"><strong>How approval works</strong><p>Submit your dates and reason. Only the HR Manager can approve or reject your request. Your status appears in your personal leave history. You can cancel a pending request.</p></div></div>
+</div>
+<div class="panel data-panel"><div class="panel-title-row"><div><h2>My leave history</h2><p>Applications, decision notes, and dates</p></div><span class="subtle-badge">Personal requests</span></div><div class="table-scroll"><table><thead><tr><th>LEAVE TYPE</th><th>DATES</th><th>DAYS</th><th>STATUS</th><th>REVIEW NOTE</th><th>ACTION</th></tr></thead><tbody id="my-leave-body"></tbody></table></div></div>
+</section>
+<section class="page hidden" id="page-approvals">
+<div class="page-heading"><div><span class="eyebrow">HR DECISION CENTER</span><h1>Leave approvals</h1><p>Only the HR Manager can approve or reject staff leave applications.</p></div><span class="subtle-badge" id="approval-count-header">0 pending</span></div>
+<div class="feature-note hidden" id="approvals-demo-note">Approval actions are in demo mode only until the Supabase leave tables and server-side authorization are implemented.</div>
+<div class="approval-metrics"><div class="panel mini-stat"><span>Awaiting review</span><strong id="approval-pending">0</strong></div><div class="panel mini-stat"><span>Approved</span><strong id="approval-approved">0</strong></div><div class="panel mini-stat"><span>Rejected</span><strong id="approval-rejected">0</strong></div></div>
+<div class="panel data-panel"><div class="panel-title-row"><div><h2>Pending applications</h2><p>Approve or reject applications from your team</p></div><span class="subtle-badge">Action required</span></div><div class="hr-inbox-note hidden" id="hr-notification-note">✉ <strong>HR Manager inbox:</strong> <span id="hr-notification-count">0</span> employee leave request(s) awaiting your approval. These in-app notifications are visible only to the HR Manager demo login.</div><div class="approval-queue" id="approval-queue"></div></div>
+<div class="panel data-panel approval-history"><div class="panel-title-row"><div><h2>Decision history</h2><p>Previously reviewed leave requests</p></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>LEAVE</th><th>DATES</th><th>DECISION</th><th>REVIEWER</th></tr></thead><tbody id="approval-history-body"></tbody></table></div></div>
+</section>
+<section class="page hidden" id="page-alerts">
+<div class="page-heading"><div><span class="eyebrow">ATTENDANCE INTELLIGENCE</span><h1>Late notifications</h1><p>Monitor late check-ins against the company's shift policy.</p></div><span class="subtle-badge">GST · Asia/Dubai</span><div class="alert-view-filter"><label for="alert-view-select">Show alerts</label><select id="alert-view-select"><option value="all">All dates</option><option value="today">Today only</option></select></div></div>
+<div class="panel policy-strip"><div><span class="panel-kicker">DEMO ATTENDANCE POLICY</span><h2>Based on each employee’s assigned shift</h2><p>Each roster includes its own start time, working days, and grace period. Late check-ins are calculated per scheduled shift; notifications stay inside this demo.</p></div><span class="policy-icon">◷</span></div>
+<div class="approval-metrics"><div class="panel mini-stat"><span>Late check-ins today</span><strong id="alert-today-count">0</strong></div><div class="panel mini-stat"><span>Alerts to review</span><strong id="alert-unread-count">0</strong></div><div class="panel mini-stat"><span>Total logged alerts</span><strong id="alert-all-count">0</strong></div></div>
+<div class="panel data-panel"><div class="panel-title-row"><div><h2>Late attendance feed</h2><p>Automatically created from attendance IN times</p></div><button class="btn btn-outline" id="ack-all-alerts" type="button">Mark all reviewed</button></div><div class="late-alert-feed" id="late-alert-feed"></div></div>
+</section>
+<section class="page hidden" id="page-corrections">
+<div class="page-heading"><div><span class="eyebrow">ATTENDANCE ACCURACY</span><h1>Time corrections</h1><p>Request a missing or incorrect punch change; the HR Manager reviews it before the record is updated.</p></div><span class="subtle-badge" id="correction-count-header">0 pending</span></div>
+<div class="feature-note hidden" id="correction-live-note">Time corrections are currently demo-only. Connected Supabase accounts require a database migration and server-side approval functions.</div>
+<div class="correction-layout">
+<div class="panel padded-panel"><span class="panel-kicker">EMPLOYEE REQUEST</span><h2>Request an attendance correction</h2><p class="section-helper">Select your recorded shift, enter the corrected local times (GST), and explain the change.</p>
+<form class="stack-form" id="correction-form">
+<label for="correction-record">Recorded attendance *</label><select id="correction-record" required=""><option value="">Choose a date and record</option></select>
+<div class="form-row"><div><label for="correction-in">Corrected IN · GST *</label><input id="correction-in" required="" type="datetime-local"/></div><div><label for="correction-out">Corrected OUT · GST (optional)</label><input id="correction-out" type="datetime-local"/></div></div>
+<label for="correction-reason">Why is this correction required? *</label><textarea id="correction-reason" maxlength="500" minlength="8" placeholder="For example: I forgot to clock out after the evening shift." required="" rows="3"></textarea>
+<div class="form-hint">These times are requests only; the original record remains unchanged until approval.</div>
+<button class="btn btn-primary full" type="submit">Submit correction request ↗</button>
+</form>
+</div>
+<div class="panel padded-panel"><span class="panel-kicker">MY CORRECTION STATUS</span><h2>Your applications</h2><div class="correction-totals"><div><strong id="corrections-my-pending">0</strong><span>Awaiting review</span></div><div><strong id="corrections-my-approved">0</strong><span>Approved</span></div><div><strong id="corrections-my-rejected">0</strong><span>Rejected</span></div></div><div class="info-card"><strong>Approval safeguard</strong><p>Your original punches are retained in an approval history. Employees cannot overwrite their own attendance directly.</p></div></div>
+</div>
+<div class="panel data-panel"><div class="panel-title-row"><div><h2>My correction history</h2><p>All submitted requests and HR decisions</p></div></div><div class="table-scroll"><table><thead><tr><th>ATTENDANCE DATE</th><th>REQUESTED IN → OUT</th><th>STATUS</th><th>REVIEW NOTE</th><th>ACTION</th></tr></thead><tbody id="correction-history-body"></tbody></table></div></div>
+<div class="manager-only panel data-panel" id="correction-review-panel"><div class="panel-title-row"><div><h2>HR Manager correction approval queue</h2><p>Approve the proposed time changes or reject with a reason.</p></div><span class="subtle-badge" id="correction-review-count">0 awaiting review</span></div><div class="approval-queue" id="correction-approval-list"></div></div>
+</section>
+<section class="page hidden" id="page-reports">
+<div class="page-heading"><div><span class="eyebrow">HR OPERATIONS INSIGHTS</span><h1>Reports &amp; exports</h1><p>Review your demo workforce records and download CSV reports for Excel.</p></div></div>
+<div class="report-summary"><div class="panel mini-stat"><span>Attendance records</span><strong id="report-attendance-count">0</strong></div><div class="panel mini-stat"><span>Leave applications</span><strong id="report-leave-count">0</strong></div><div class="panel mini-stat"><span>Time corrections</span><strong id="report-correction-count">0</strong></div></div>
+<div class="report-downloads">
+<div class="panel export-card"><span class="export-icon">◷</span><h2>Attendance register</h2><p>Punches, corrected records, hours, late minutes.</p><button class="btn btn-primary" data-export="attendance" type="button">Download attendance CSV ↓</button></div>
+<div class="panel export-card"><span class="export-icon">▦</span><h2>Leave summary</h2><p>Applications, dates, balances, statuses, and review decisions.</p><button class="btn btn-primary" data-export="leaves" type="button">Download leave CSV ↓</button></div>
+<div class="panel export-card"><span class="export-icon">⇄</span><h2>Correction audit</h2><p>Requested changes, original times, corrected times, decisions and reviewers.</p><button class="btn btn-primary" data-export="corrections" type="button">Download corrections CSV ↓</button></div>
+<div class="panel export-card"><span class="export-icon">♙</span><h2>Employee directory</h2><p>Employee IDs, roles, departments, managers.</p><button class="btn btn-primary" data-export="employees" type="button">Download employees CSV ↓</button></div>
+</div>
+<div class="info-panel"><span>ⓘ</span><div><strong>Demo data only</strong><p>Exports contain only data visible to your current preview role and are generated locally in your browser. Avoid putting real confidential HR information in the demo.</p></div></div>
+</section>
+<section class="page hidden" id="page-employees"><div class="page-heading"><div><span class="eyebrow">YOUR WORKFORCE</span><h1>Employee profiles</h1><p>Employee numbers, departments, reporting managers, joining dates, and employment status.</p></div><button class="btn btn-primary hidden" id="add-employee-btn" type="button">+ Create employee account</button></div>
+<div class="panel data-panel"><div class="panel-title-row"><div><h2>Employee directory</h2><p id="employee-subcaption">Browse team members</p></div><input aria-label="Search employees" class="search-input" id="employee-search" placeholder="Search employees..." type="search"/></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>STAFF ID</th><th>DEPARTMENT</th><th>POSITION</th><th>ACCESS ROLE</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody id="employee-body"></tbody></table></div></div>
+<div class="info-panel"><span>ⓘ</span><div><strong>Adding new users</strong><p>In connected mode, administrators invite employees by email. Each employee receives a secure link to set their password. No administrator can see an employee's password.</p></div></div>
+</section>
+
+<section class="page hidden" id="page-assets">
+  <div class="page-heading asset-page-heading">
+    <div><span class="eyebrow">COMPANY PROPERTY &amp; ALLOCATIONS</span><h1>Company assets</h1><p>Keep track of company mobile phones, SIM cards, and laptops issued to employees.</p></div>
+    <div class="asset-heading-actions"><button class="btn btn-outline hidden" id="asset-export-btn" type="button">↓ Export assets CSV</button><button class="btn btn-primary hidden" id="asset-add-btn" type="button">+ Register new asset</button></div>
+  </div>
+  <div class="asset-stat-grid" id="asset-stats" aria-label="Asset inventory summary"></div>
+  <div class="panel asset-inventory-panel">
+    <div class="panel-title-row asset-table-heading"><div><h2 id="asset-table-title">Asset register</h2><p id="asset-table-caption">Track company devices and their current assignees.</p></div><div class="asset-filters">
+      <label class="asset-filter"><span>Type</span><select id="asset-type-filter"><option value="all">All asset types</option><option value="mobile">Mobile phones</option><option value="sim">SIM cards</option><option value="laptop">Laptops</option></select></label>
+      <label class="asset-filter"><span>Status</span><select id="asset-status-filter"><option value="all">All statuses</option><option value="assigned">Assigned</option><option value="available">Available</option><option value="maintenance">Maintenance</option><option value="retired">Retired</option></select></label>
+      <label class="asset-filter asset-search-filter"><span>Search</span><input id="asset-search" placeholder="Search asset or ID…" type="search" autocomplete="off" /></label>
+    </div></div>
+    <div class="table-scroll asset-table-scroll"><table class="asset-table"><thead><tr><th>ASSET</th><th>ASSET TAG</th><th>ASSIGNED TO</th><th>IMEI / SERIAL / ICCID</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody id="asset-table-body"></tbody></table></div>
+  </div>
+  <div class="panel asset-help-panel"><span class="asset-help-icon" aria-hidden="true">ⓘ</span><div><strong id="asset-access-note-title">Company equipment records</strong><p id="asset-access-note">This demonstration saves asset records in your browser. A secure backend is needed before entering real company IMEI, ICCID or serial numbers.</p></div></div>
+</section>
+<section class="page hidden" id="page-account"><div class="page-heading"><div><span class="eyebrow">PERSONAL SETTINGS</span><h1>My account</h1><p>Manage your profile and account security.</p></div></div>
+<div class="account-grid"><div class="panel account-card"><div class="big-avatar photo-avatar" id="account-big-avatar">HS</div>
+<div class="account-photo-controls" id="account-photo-controls">
+<label class="btn btn-outline photo-choose-btn" for="account-photo-input">📷 Upload / replace photo</label>
+<input accept="image/jpeg,image/png,image/webp" aria-label="Choose your profile photo" class="photo-file-input" id="account-photo-input" type="file"/>
+<button class="btn photo-remove-btn" id="account-photo-remove" type="button">Remove photo</button>
+<small>JPG, PNG or WebP · Up to 5 MB · Saved in this browser only.</small>
+</div>
+<p class="photo-live-note hidden" id="account-photo-live-note">Photo uploading is available in the HTML demo only. A secure storage service is needed for real employee accounts.</p>
+<h2 id="account-name">Administrator</h2><p id="account-email">admin@example.com</p><div class="account-data"><div><span>ROLE</span><strong id="account-role">Admin</strong></div><div><span>DEPARTMENT</span><strong id="account-dept">Human Resources</strong></div><div><span>POSITION</span><strong id="account-title">Administrator</strong></div></div></div>
+<div class="panel security-card"><span class="eyebrow">ACCOUNT SECURITY</span><h2>Change password</h2><p>Update your password securely. Passwords are managed by Supabase in connected mode.</p><form class="stack-form" id="account-password-form"><label for="account-new-password">New password</label><input autocomplete="new-password" id="account-new-password" minlength="10" placeholder="At least 10 characters" required="" type="password"/><label for="account-confirm-password">Confirm new password</label><input autocomplete="new-password" id="account-confirm-password" minlength="10" placeholder="Repeat your password" required="" type="password"/><button class="btn btn-primary" type="submit">Update password</button></form></div></div>
+<div class="panel my-assets-panel" id="my-account-assets-panel"><div class="panel-title-row"><div><span class="panel-kicker">COMPANY EQUIPMENT</span><h2>My assigned assets</h2><p>Devices currently allocated to your employee account.</p></div><button class="btn btn-outline" data-page="assets" type="button">View equipment →</button></div><div id="account-assets-list" class="account-asset-list"></div></div>
+
+</section>
+</div>
+<footer class="workspace-footer"><span>© Helen &amp; Sons HRIS · Demo Studio</span><span>Attendance timezone: Asia/Dubai (GST)</span></footer>
+</div>
+</div>
+<div aria-labelledby="modal-title" aria-modal="true" class="modal-backdrop hidden" id="employee-modal" role="dialog"><div class="modal"><div class="modal-top"><div><span class="eyebrow">EMPLOYEE MANAGEMENT</span><h2 id="modal-title">Create employee account</h2></div><button aria-label="Close" class="modal-close" id="close-modal" type="button">×</button></div><p>Administrators can create Employee, HR Manager, or Administrator preview accounts and manage their access roles. Default system accounts and your own account cannot be changed here. Real login roles require secure server-side authorization.</p><form class="stack-form" id="employee-form">
+<div class="employee-photo-section" id="employee-photo-section">
+<div class="photo-avatar employee-photo-preview" id="emp-photo-preview">HS</div>
+<div class="photo-edit-details"><strong>Employee profile photo</strong><p>Upload a JPG, PNG or WebP image (maximum 5 MB). Images are cropped and compressed automatically.</p>
+<div class="employee-photo-controls" id="emp-photo-controls">
+<label class="btn btn-outline photo-choose-btn" for="emp-photo-input">📷 Choose photo</label>
+<input accept="image/jpeg,image/png,image/webp" aria-label="Choose employee profile photo" class="photo-file-input" id="emp-photo-input" type="file"/>
+<button class="btn photo-remove-btn" id="emp-photo-remove" type="button">Remove</button>
+</div>
+<small aria-live="polite" class="photo-help" id="emp-photo-info">Photo changes are applied when you save the employee profile.</small>
+</div>
+</div>
+<div class="form-row"><div><label for="emp-name">Full name *</label><input id="emp-name" maxlength="100" placeholder="Employee name" required=""/></div><div><label for="emp-email">Work email *</label><input id="emp-email" placeholder="name@company.com" required="" type="email"/></div></div><div class="form-row"><div><label for="emp-code">Employee ID *</label><input id="emp-code" maxlength="32" placeholder="HS-0007" required=""/></div><div><label for="emp-phone">Work phone</label><input id="emp-phone" maxlength="30" placeholder="+971 ..." type="tel"/></div></div><div class="form-row"><div><label for="emp-dept">Department *</label><input id="emp-dept" maxlength="80" placeholder="Operations" required=""/></div><div><label for="emp-title">Job title *</label><input id="emp-title" maxlength="80" placeholder="Site Supervisor" required=""/></div></div><div class="form-row"><div><label for="emp-location">Work location</label><input id="emp-location" maxlength="90" placeholder="Dubai office"/></div><div><label for="emp-joined">Joining date *</label><input id="emp-joined" required="" type="date"/></div></div>
+<div class="form-row"><div><label for="emp-type">Employment type</label><select id="emp-type"><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option></select></div><div><label for="emp-manager">Reporting manager</label><select id="emp-manager"><option value="">None assigned</option></select></div></div>
+<div class="form-row"><div><label for="emp-status">Employment status</label><select id="emp-status"><option value="active">Active</option><option value="inactive">Inactive</option></select></div></div>
+<div class="form-row"><div><label for="emp-annual">Annual leave allowance (days)</label><input id="emp-annual" max="365" min="0" required="" type="number" value="24"/></div><div><label for="emp-sick">Sick leave allowance (days)</label><input id="emp-sick" max="365" min="0" required="" type="number" value="14"/></div></div>
+<div class="role-assignment-section"><label for="emp-role">System access role *</label><select id="emp-role" required><option value="employee">Employee — personal attendance &amp; leave</option><option value="hr">HR Manager — leave &amp; correction approvals</option><option value="admin">Administrator — employees &amp; company assets</option></select><small class="role-assignment-help" id="emp-role-help" aria-live="polite">Employee: personal attendance, leave requests, and assigned assets only. Role settings in this demo do not create secure login credentials.</small></div><div class="modal-actions"><button class="btn btn-outline" id="cancel-modal" type="button">Cancel</button><button class="btn btn-primary" id="save-employee-btn" type="submit">Save employee →</button></div></form></div></div>
+<div aria-labelledby="decision-title" aria-modal="true" class="modal-backdrop hidden" id="decision-modal" role="dialog"><div class="modal decision-dialog"><div class="modal-top"><div><span class="eyebrow">LEAVE APPROVAL</span><h2 id="decision-title">Reject leave application</h2></div><button aria-label="Close" class="modal-close" id="close-decision-modal" type="button">×</button></div><p>Please enter a reason. The employee will see this note in their leave history.</p><form class="stack-form" id="decision-form"><label for="decision-note">Reason for rejection</label><textarea id="decision-note" maxlength="400" minlength="5" placeholder="Explain why this request cannot be approved..." required="" rows="4"></textarea><div class="modal-actions"><button class="btn btn-outline" id="cancel-decision" type="button">Cancel</button><button class="btn btn-danger" type="submit">Reject application</button></div></form></div></div>
+<div aria-labelledby="correction-decision-title" aria-modal="true" class="modal-backdrop hidden" id="correction-decision-modal" role="dialog"><div class="modal"><div class="modal-top"><div><span class="eyebrow">ATTENDANCE REVIEW</span><h2 id="correction-decision-title">Reject correction</h2></div><button aria-label="Close" class="modal-close" data-close="correction-decision-modal" type="button">×</button></div><p>Give the employee a clear reason for rejecting this time correction.</p><form class="stack-form" id="correction-decision-form"><label for="correction-decision-reason">Rejection reason *</label><textarea id="correction-decision-reason" maxlength="400" minlength="5" placeholder="Explain why the request cannot be approved..." required="" rows="4"></textarea><div class="modal-actions"><button class="btn btn-outline" data-close="correction-decision-modal" type="button">Cancel</button><button class="btn btn-danger" type="submit">Reject correction</button></div></form></div></div>
+
+<div aria-labelledby="asset-modal-title" aria-modal="true" class="modal-backdrop hidden" id="asset-modal" role="dialog">
+ <div class="modal asset-modal-body"><div class="modal-top"><div><span class="eyebrow">ADMINISTRATOR · COMPANY ASSETS</span><h2 id="asset-modal-title">Register company asset</h2></div><button aria-label="Close asset editor" class="modal-close" id="asset-close-modal" type="button">×</button></div>
+ <p class="asset-modal-info">Only the Administrator can register or edit asset identifiers, including IMEI, laptop serial numbers and SIM ICCID.</p>
+ <form id="asset-form" class="stack-form">
+  <div class="form-row"><div><label for="asset-type">Asset category *</label><select id="asset-type" required><option value="mobile">Mobile phone</option><option value="sim">SIM card</option><option value="laptop">Laptop</option></select></div><div><label for="asset-tag">Company asset tag *</label><input id="asset-tag" maxlength="40" required placeholder="HNS-MOB-001" autocomplete="off"/></div></div>
+  <div class="form-row"><div><label for="asset-name">Asset display name *</label><input id="asset-name" maxlength="100" placeholder="Samsung Galaxy A55" required/></div><div><label for="asset-brand">Brand / manufacturer</label><input id="asset-brand" maxlength="60" placeholder="Samsung / Dell / e&amp;"/></div></div>
+  <div class="form-row"><div><label for="asset-model">Model / plan</label><input id="asset-model" maxlength="80" placeholder="A55 / Latitude 5440"/></div><div><label for="asset-identifier" id="asset-identifier-label">IMEI number (15 digits) *</label><input id="asset-identifier" maxlength="64" placeholder="15-digit phone IMEI" required autocomplete="off"/><small class="asset-field-hint" id="asset-identifier-hint">Printed in the phone settings or on the device box.</small></div></div>
+  <div class="form-row hidden" id="asset-second-imei-row"><div><label for="asset-imei2">Second IMEI (dual SIM, optional)</label><input id="asset-imei2" maxlength="15" placeholder="15-digit second IMEI" inputmode="numeric" autocomplete="off"/></div></div>
+  <div class="form-row hidden" id="asset-sim-fields"><div><label for="asset-sim-number">SIM mobile number</label><input id="asset-sim-number" maxlength="35" placeholder="+971 5x xxx xxxx" type="tel"/></div><div><label for="asset-sim-provider">Network provider</label><input id="asset-sim-provider" maxlength="70" placeholder="e&amp; / du"/></div></div>
+  <div class="form-row"><div><label for="asset-status">Current status *</label><select id="asset-status"><option value="available">Available / in store</option><option value="assigned">Assigned to employee</option><option value="maintenance">Under maintenance</option><option value="retired">Retired / written off</option></select></div><div><label for="asset-assignee">Assigned employee</label><select id="asset-assignee"><option value="">Not assigned</option></select></div></div>
+  <div class="form-row"><div><label for="asset-condition">Condition</label><select id="asset-condition"><option>New</option><option selected>Good</option><option>Fair</option><option>Damaged</option></select></div><div><label for="asset-assigned-on">Date issued</label><input id="asset-assigned-on" type="date"/></div></div>
+  <div class="form-row"><div><label for="asset-purchased-on">Purchase date</label><input id="asset-purchased-on" type="date"/></div><div><label for="asset-warranty-until">Warranty until</label><input id="asset-warranty-until" type="date"/></div></div>
+  <label for="asset-notes">Notes / accessories included</label><textarea id="asset-notes" rows="3" maxlength="500" placeholder="Charger, case, issued accessories, condition notes…"></textarea>
+  <div class="asset-save-help">Changes to the assigned employee are recorded in the asset history. Retired assets remain in the register for audit purposes.</div>
+  <div class="modal-actions"><button class="btn btn-outline" id="asset-cancel-modal" type="button">Cancel</button><button class="btn btn-primary" type="submit" id="asset-save-btn">Save asset →</button></div>
+ </form>
+ </div>
+</div>
+<div aria-labelledby="asset-view-title" aria-modal="true" class="modal-backdrop hidden" id="asset-view-modal" role="dialog"><div class="modal asset-detail-modal"><div class="modal-top"><div><span class="eyebrow">COMPANY EQUIPMENT</span><h2 id="asset-view-title">Asset details</h2></div><button aria-label="Close asset details" class="modal-close" id="asset-view-close" type="button">×</button></div><div id="asset-view-content"></div><div class="modal-actions"><button class="btn btn-outline" id="asset-view-done" type="button">Close</button></div></div></div>
+<div aria-labelledby="asset-return-title" aria-modal="true" class="modal-backdrop hidden" id="asset-return-modal" role="dialog"><div class="modal asset-return-modal"><div class="modal-top"><div><span class="eyebrow">ASSET RECOVERY · ADMINISTRATOR</span><h2 id="asset-return-title">Record asset return</h2></div><button aria-label="Close asset return" class="modal-close" id="asset-return-close" type="button">×</button></div><p id="asset-return-description">Confirm that the device has been received back from the employee.</p><form class="stack-form" id="asset-return-form"><label for="asset-return-condition">Condition on return</label><select id="asset-return-condition"><option>Good</option><option>Fair</option><option>Damaged</option></select><label for="asset-return-next-status">After return</label><select id="asset-return-next-status"><option value="available">Available / in store</option><option value="maintenance">Under maintenance</option><option value="retired">Retired / written off</option></select><label for="asset-return-note">Return notes (optional)</label><textarea id="asset-return-note" maxlength="500" rows="3" placeholder="Accessories received, damage notes…"></textarea><div class="modal-actions"><button class="btn btn-outline" id="asset-return-cancel" type="button">Cancel</button><button class="btn btn-primary" type="submit">Confirm return →</button></div></form></div></div>
+<script defer="" src="js/config.js"></script>
+<script defer="" src="js/app.js"></script>
+</body>
+</html>
