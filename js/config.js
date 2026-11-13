@@ -7,3 +7,4 @@ window.HRIS_CONFIG = {
   supabasePublishableKey: "sb_publishable_pLQI8enzkUUEp6_phuSu4w_zYRfppZ6",
   timezone: "Asia/Dubai"
 };
+// Trigger Cloudflare Pages deployment
