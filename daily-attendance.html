@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Daily Attendance Preview | Helen and Sons HRIS</title>
+  <style>
+    :root { --navy: #14233e; --ink:#1f2f43; --muted:#607287; --brand:#267e73; --bg:#f5f7fa; --border:#dce4eb; --good:#15754b; --amber:#98630f; --bad:#ac3340; }
+    * { box-sizing: border-box; }
+    body { margin:0; font: 15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg); }
+    header { background:var(--navy); color:#fff; padding:22px max(18px, calc((100vw - 1180px)/2)); }
+    .eyebrow { color:#a9ded5; letter-spacing:.12em; font-size:12px; text-transform:uppercase; font-weight:700; }
+    h1 { margin:6px 0 2px; font-size:clamp(24px,3.3vw,35px); line-height:1.2; }
+    header p { color:#d6e0ec; margin:7px 0 0; }
+    main { max-width:1180px; margin:28px auto 64px; padding:0 18px; }
+    .panel { background:#fff; border:1px solid var(--border); border-radius:15px; box-shadow:0 6px 18px #12283b09; padding:24px; margin:0 0 18px; }
+    .intro { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .intro h2, .panel h2 { font-size:19px; margin:0 0 7px; }
+    .intro p, .subtle { margin:0; color:var(--muted); }
+    .pill { display:inline-block; border-radius:999px; font-size:12px; font-weight:700; padding:5px 11px; background:#eaf3f0; color:var(--brand); }
+    .form-row { display:flex; align-items:end; gap:12px; flex-wrap:wrap; }
+    .form-row label { display:flex; flex-direction:column; gap:6px; font-weight:650; }
+    input { font:inherit; padding:10px 12px; border:1px solid #becbd7; border-radius:9px; background:white; color:var(--ink); min-width:220px; }
+    input:focus { outline:2px solid #83c2b8; outline-offset:1px; }
+    button, .link-button { font:inherit; cursor:pointer; padding:10px 17px; border:0; border-radius:9px; background:var(--brand); color:#fff; font-weight:700; text-decoration:none; }
+    button:hover { filter:brightness(.94); }
+    button.secondary { background:#e9eff4; color:#284059; }
+    button:disabled { cursor:wait; opacity:.55; }
+    .actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .metrics { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; margin:18px 0; }
+    .metric { border:1px solid var(--border); border-radius:12px; padding:18px; background:#fbfcfd; }
+    .metric strong { display:block; font-size:30px; line-height:1.25; color:var(--navy); }
+    .metric span { color:var(--muted); font-size:13px; }
+    .table-wrap { width:100%; overflow-x:auto; }
+    table { border-collapse:collapse; width:100%; min-width:730px; }
+    th,td { padding:13px 10px; border-bottom:1px solid #edf0f4; text-align:left; vertical-align:middle; }
+    th { color:var(--muted); text-transform:uppercase; letter-spacing:.045em; font-size:11px; }
+    tbody tr:hover { background:#f8fafb; }
+    .status { display:inline-block; padding:5px 9px; border-radius:999px; font-size:12px; font-weight:700; background:#ebf7ef; color:var(--good); }
+    .status.review { background:#fff5df; color:var(--amber); }
+    .status.problem { background:#fbe9ea; color:var(--bad); }
+    .notice { margin:15px 0 0; padding:12px 14px; border-left:3px solid #c39d51; background:#fffaf0; border-radius:0 8px 8px 0; color:#6e5a36; }
+    .message { min-height:20px; margin-top:10px; color:var(--muted); }
+    .message.error { color:var(--bad); }
+    .hidden { display:none !important; }
+    .account { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:15px; }
+    .account small { color:var(--muted); }
+    .auth-grid { display:flex; gap:12px; flex-wrap:wrap; align-items:end; margin-top:16px; }
+    .auth-grid label { display:flex; flex-direction:column; font-weight:650; gap:6px; }
+    .note-bottom { color:var(--muted); font-size:13px; margin-top:14px; }
+    a { color:var(--brand); }
+    @media (max-width:620px) { .metrics { grid-template-columns:1fr; } .panel{padding:18px;} input{width:100%;} .auth-grid label{width:100%;} .form-row label{width:100%;} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Helen and Sons &bull; HRIS</div>
+    <h1>Daily Attendance</h1>
+    <p>Fingerprint IN / OUT preview &bull; UAE local time</p>
+  </header>
+  <main>
+    <section class="panel intro">
+      <div>
+        <h2>Attendance from verified scanner events</h2>
+        <p>First scan is a possible IN; last scan is a possible OUT. Review before approving payroll.</p>
+      </div>
+      <span class="pill">Read-only preview</span>
+    </section>
+
+    <section class="panel hidden" id="loginPanel">
+      <h2>Secure sign in</h2>
+      <p class="subtle">Only Admin and authorized Attendance Viewer accounts can access this page.</p>
+      <form id="loginForm" class="auth-grid">
+        <label>Email <input id="loginEmail" type="email" autocomplete="username" required placeholder="Work email"></label>
+        <label>Password <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Password"></label>
+        <button id="loginButton" type="submit">Sign in</button>
+      </form>
+      <p class="note-bottom">Forgot your password? <a href="reset-password.html">Reset password</a></p>
+      <div id="loginMessage" class="message" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="panel hidden" id="dashboardPanel">
+      <div class="account">
+        <div><strong>Attendance overview</strong><br><small id="accountLabel"></small></div>
+        <button type="button" id="signOutButton" class="secondary">Sign out</button>
+      </div>
+      <div class="form-row">
+        <label>Work date (UAE) <input type="date" id="dateInput"></label>
+        <button type="button" id="refreshButton">Refresh attendance</button>
+      </div>
+      <div class="metrics">
+        <div class="metric"><strong id="totalCount">0</strong><span>Employees with scans</span></div>
+        <div class="metric"><strong id="candidateCount">0</strong><span>IN/OUT candidates</span></div>
+        <div class="metric"><strong id="reviewCount">0</strong><span>Need review</span></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Employee</th><th>Scanner ID</th><th>First scan · IN?</th><th>Last scan · OUT?</th><th>Scans</th><th>Elapsed</th><th>Result</th></tr></thead>
+          <tbody id="attendanceBody"></tbody>
+        </table>
+      </div>
+      <div id="dashboardMessage" class="message" role="status" aria-live="polite"></div>
+      <p class="notice"><strong>Important:</strong> This is not approved attendance or paid work time. Single scans have no OUT. Overnight shifts, breaks, leave, absences and overtime are not calculated. Only staff with recorded scans appear here.</p>
+    </section>
+    <div id="bootMessage" class="panel" role="status">Loading HRIS securely…</div>
+  </main>
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js"></script>
+  <script>
+    (() => {
+      'use strict';
+      const el = id => document.getElementById(id);
+      const boot = el('bootMessage');
+      const loginPanel = el('loginPanel');
+      const dashboardPanel = el('dashboardPanel');
+      const config = window.HRIS_CONFIG || {};
+      if (!config.supabaseUrl || !config.supabasePublishableKey || !window.supabase) {
+        boot.textContent = 'Connection configuration unavailable. Check js/config.js and the Supabase JavaScript library.';
+        return;
+      }
+      const client = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey);
+      const allowedRoles = new Set(['admin', 'attendance_viewer']);
+      const localDay = () => {
+        const parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone:'Asia/Dubai', year:'numeric', month:'2-digit', day:'2-digit'
+        }).formatToParts(new Date());
+        const m = Object.fromEntries(parts.map(p => [p.type, p.value]));
+        return `${m.year}-${m.month}-${m.day}`;
+      };
+      const show = (panel) => {
+        boot.classList.add('hidden');
+        loginPanel.classList.toggle('hidden', panel !== 'login');
+        dashboardPanel.classList.toggle('hidden', panel !== 'dashboard');
+      };
+      const message = (id, text, isError = false) => {
+        const target = el(id); target.textContent = text;
+        target.classList.toggle('error', isError);
+      };
+      const clockTime = (stamp) => {
+        if (!stamp) return '—';
+        const match = String(stamp).match(/\b(\d{2}):(\d{2})(?::(\d{2}))?/);
+        if (!match) return '—';
+        const hour = Number(match[1]);
+        return `${(hour % 12) || 12}:${match[2]}:${match[3] || '00'} ${hour < 12 ? 'AM' : 'PM'}`;
+      };
+      const elapsed = minutes => {
+        if (minutes === null || minutes === undefined) return '—';
+        return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+      };
+      const statusInfo = s => {
+        if (s === 'candidate_in_out') return ['Candidate · review before approval',''];
+        if (s === 'review_single_scan') return ['Missing second scan','review'];
+        if (s === 'review_multiple_scans') return ['Multiple scans · review','review'];
+        return ['Mapping needs review','problem'];
+      };
+      const addCell = (tr, value) => {
+        const td = document.createElement('td');
+        td.textContent = String(value ?? '—');
+        tr.appendChild(td);
+        return td;
+      };
+      async function loadAttendance() {
+        const button = el('refreshButton'); button.disabled = true;
+        message('dashboardMessage', 'Loading attendance preview…');
+        try {
+          const { data, error } = await client.from('daily_attendance_preview')
+            .select('device_key,scanner_user_id,work_date,employee_name,first_scan_local,last_scan_local,punch_count,preview_status,elapsed_minutes')
+            .eq('work_date', el('dateInput').value)
+            .order('employee_name', { ascending:true })
+            .limit(500);
+          if (error) throw error;
+          const rows = data || [];
+          const body = el('attendanceBody'); body.replaceChildren();
+          for (const item of rows) {
+            const tr = document.createElement('tr');
+            addCell(tr, item.employee_name);
+            addCell(tr, item.scanner_user_id);
+            addCell(tr, clockTime(item.first_scan_local));
+            addCell(tr, clockTime(item.last_scan_local));
+            addCell(tr, item.punch_count);
+            addCell(tr, elapsed(item.elapsed_minutes));
+            const td = document.createElement('td');
+            const badge = document.createElement('span');
+            const [label, style] = statusInfo(item.preview_status);
+            badge.className = `status ${style}`.trim();
+            badge.textContent = label;
+            td.appendChild(badge); tr.appendChild(td);
+            body.appendChild(tr);
+          }
+          el('totalCount').textContent = rows.length;
+          const candidate = rows.filter(r => r.preview_status === 'candidate_in_out').length;
+          el('candidateCount').textContent = candidate;
+          el('reviewCount').textContent = rows.length - candidate;
+          message('dashboardMessage', rows.length
+            ? `${rows.length} employee(s) with scans on ${el('dateInput').value}. View is read-only.`
+            : 'No scans found for this date. This does not mean employees were absent.');
+        } catch (err) {
+          message('dashboardMessage', `Could not load attendance: ${err.message || 'Unknown error'}`, true);
+        } finally { button.disabled = false; }
+      }
+      async function authorize() {
+        const { data, error } = await client.auth.getUser();
+        if (error || !data.user) { show('login'); return; }
+        const { data:profile, error:profileError } = await client.from('profiles')
+          .select('role,active').eq('id', data.user.id).maybeSingle();
+        if (profileError || !profile || !profile.active || !allowedRoles.has(profile.role)) {
+          await client.auth.signOut();
+          show('login');
+          message('loginMessage', 'This page is for authorized Admin / Attendance Viewer accounts only.', true);
+          return;
+        }
+        el('accountLabel').textContent = `${data.user.email || 'Signed in'} · ${profile.role}`;
+        show('dashboard');
+        await loadAttendance();
+      }
+      el('dateInput').value = localDay();
+      el('refreshButton').addEventListener('click', loadAttendance);
+      el('dateInput').addEventListener('change', loadAttendance);
+      el('loginForm').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const button = el('loginButton'); button.disabled = true;
+        message('loginMessage', 'Signing in…');
+        try {
+          const { error } = await client.auth.signInWithPassword({
+            email:el('loginEmail').value.trim(), password:el('loginPassword').value
+          });
+          el('loginPassword').value = '';
+          if (error) throw error;
+          await authorize();
+        } catch (err) { message('loginMessage', err.message || 'Sign in failed', true); }
+        finally { button.disabled = false; }
+      });
+      el('signOutButton').addEventListener('click', async () => {
+        await client.auth.signOut();
+        show('login');
+        message('loginMessage', 'Signed out.');
+      });
+      authorize().catch(err => {
+        boot.textContent = `Unable to initialize: ${err.message || 'Unknown error'}`;
+        boot.classList.remove('hidden');
+      });
+    })();
+  </script>
+</body>
+</html>
