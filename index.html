@@ -54,6 +54,46 @@
 .bulk-import-footer{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:12px 0 0}
 #live-modal:has(.bulk-table-wrap) .modal{max-width:min(980px,95vw)}
 @media (max-width:700px){.bulk-actions{justify-content:flex-start}.bulk-import-footer{display:block}.bulk-import-footer button{margin-top:10px}}
+
+
+/* Admin-only 7-day HR roster history, directly on Overview and Attendance. */
+.h7-main-panel{margin:24px 0;min-width:0}
+.h7-main-panel.hidden{display:none!important}
+.h7-panel-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+.h7-panel-header h2{margin:4px 0 6px;font-size:clamp(20px,2vw,27px);line-height:1.25}
+.h7-panel-header p{margin:0;line-height:1.55;color:#5e6581;font-size:13px}
+.h7-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.h7-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
+.h7-stat{background:#f7f8fb;border:1px solid #e5e8ee;padding:13px 15px;border-radius:14px;min-width:0}
+.h7-stat strong{display:block;color:#070b3e;font-size:clamp(22px,2.2vw,29px);font-variant-numeric:tabular-nums;line-height:1.25}
+.h7-stat small{color:#606881;font-size:12px;display:block;line-height:1.35;margin-top:3px}
+.h7-filter-bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:18px 0 12px}
+.h7-filter-bar label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;color:#303755;flex:1 1 180px;min-width:145px}
+.h7-filter-bar select,.h7-filter-bar input{width:100%;height:42px;padding:8px 12px;border-radius:10px;border:1px solid #c8cede;background:#fff;color:#070b3e;font:inherit}
+.h7-table-viewport{overflow:auto;max-height:550px;max-width:100%;border:1px solid #e2e6ef;border-radius:15px}
+.h7-table-viewport table{border-collapse:separate;border-spacing:0;width:100%;min-width:755px}
+.h7-table-viewport thead{position:sticky;top:0;z-index:2;background:#f1f3f9}
+.h7-table-viewport th{padding:13px 14px;font-size:11px;color:#2c3552;letter-spacing:.055em;text-align:left;white-space:nowrap;border-bottom:1px solid #e2e6ef}
+.h7-table-viewport td{padding:12px 14px;text-align:left;vertical-align:top;border-bottom:1px solid #ecedf2;font-size:13px;color:#0d173c;line-height:1.4}
+.h7-table-viewport tr:last-child td{border-bottom:0}
+.h7-table-viewport small{display:block;color:#626c86;font-size:11px;margin-top:3px}
+.h7-review{font-size:12px;color:#7b510b;font-weight:650}
+.h7-empty{color:#65708a!important}
+.h7-status{color:#7b510b;font-weight:650}
+.h7-footer{font-size:12px;color:#5c647c;line-height:1.65;margin:13px 0 0}
+.h7-error{color:#ac2438;font-weight:650}
+.h7-loading{padding:26px 12px;color:#606881}
+html[data-theme="dark"] .h7-stat{background:#141735;border-color:#303754}
+html[data-theme="dark"] .h7-stat strong,html[data-theme="dark"] .h7-table-viewport td{color:#f0f1ff}
+html[data-theme="dark"] .h7-panel-header p,html[data-theme="dark"] .h7-stat small,html[data-theme="dark"] .h7-footer,html[data-theme="dark"] .h7-table-viewport small{color:#c2c7d9}
+html[data-theme="dark"] .h7-filter-bar label{color:#e5e7f5}
+html[data-theme="dark"] .h7-filter-bar select,html[data-theme="dark"] .h7-filter-bar input{background:#171a38;color:#fff;border-color:#394060}
+html[data-theme="dark"] .h7-table-viewport{border-color:#363b56}
+html[data-theme="dark"] .h7-table-viewport thead{background:#212545}
+html[data-theme="dark"] .h7-table-viewport th{color:#e7e9f6;border-color:#353b59}
+html[data-theme="dark"] .h7-table-viewport td{border-color:#343951}
+html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9ce7b}
+@media(max-width:700px){.h7-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.h7-actions{width:100%;justify-content:flex-start}.h7-main-panel{margin:16px 0}}
 </style></head>
 <body>
 <div aria-live="polite" class="toast" id="toast" role="status"></div>
@@ -316,7 +356,7 @@
   const $ = id => document.getElementById(id);
   const html = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const DAY = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dubai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-  const state = {client:null,user:null,profile:null,people:[],staff:[],scans:[],daily:[],web:[],leaves:[],corrections:[],assets:[],page:'overview',date:DAY(),busy:false,loaded:false};
+  const state = {client:null,user:null,profile:null,people:[],staff:[],scans:[],daily:[],web:[],leaves:[],corrections:[],assets:[],historyData:null,historyFetchedAt:0,historyLoading:false,historyError:null,page:'overview',date:DAY(),busy:false,loaded:false};
   let bulkRows = [];
   let bulkReviewed = false;
   let historyCandidateRows = [];
@@ -399,6 +439,7 @@
     $('top-leave-btn')?.classList.toggle('hidden',!manager());
     $('top-alert-btn')?.classList.add('hidden');
     const header=$('live-system-alert');if(header)header.textContent=(team()?'LIVE SUPABASE · Team scans are raw data; HR review is required before payroll.':'LIVE SUPABASE · Your own attendance and HR requests only.');
+    showHistoryDashboardVisibility();
     switchPage(state.page);
   }
   function switchPage(page){
@@ -433,7 +474,133 @@
     if(!state.people.some(p=>p.id===state.profile.id))state.people.push(state.profile);
     state.loaded=true;
     renderCurrent();
+    if(admin())void loadDashboardHistory();
   }
+
+  /* The HR roster scan history is stored separately from payroll and the live attendance table. */
+  function makeHistoryDashboardPanel(scope){
+    return `<section class="panel data-panel h7-main-panel hidden" id="h7-${scope}-panel" aria-label="Historical fingerprint attendance last seven UAE days">
+      <div class="h7-panel-header">
+        <div><span class="panel-kicker">FINGERPRINT HISTORY · ADMIN REVIEW</span><h2>Last 7 days · All employee IN / OUT candidates</h2>
+          <p id="h7-${scope}-subtitle">UAE time (GST) · Loading the HR roster's recorded scans…</p></div>
+        <div class="h7-actions"><button type="button" class="btn btn-outline" data-h7-reload>↻ Refresh history</button>
+          <button type="button" class="btn btn-primary" data-h7-download>↓ Export all 7 days CSV</button></div>
+      </div>
+      <div class="h7-stats" aria-label="Historical attendance summary">
+        <div class="h7-stat"><strong id="h7-${scope}-employees">—</strong><small>HR roster employees</small></div>
+        <div class="h7-stat"><strong id="h7-${scope}-scans">—</strong><small>Recorded fingerprint scans</small></div>
+        <div class="h7-stat"><strong id="h7-${scope}-days">7</strong><small>Completed UAE calendar days</small></div>
+        <div class="h7-stat"><strong id="h7-${scope}-review">—</strong><small>Single-scan days needing review</small></div>
+      </div>
+      <div class="h7-filter-bar">
+        <label>Employee<input type="search" id="h7-${scope}-search" placeholder="Search name, employee code or scanner ID" autocomplete="off" /></label>
+        <label>Date<select id="h7-${scope}-date"><option value="">All 7 days</option></select></label>
+        <label>Scan status<select id="h7-${scope}-status"><option value="all">All records</option><option value="scanned">Has scans</option><option value="missing-out">Single scan / missing OUT?</option><option value="no-scan">No recorded scan</option></select></label>
+      </div>
+      <p class="h7-footer" id="h7-${scope}-count" aria-live="polite">Loading historical records…</p>
+      <div class="h7-table-viewport" role="region" tabindex="0" aria-label="Scroll seven day historical attendance table">
+        <table><thead><tr><th>EMPLOYEE / CODE</th><th>DATE · UAE</th><th>FIRST SCAN · IN?</th><th>LAST SCAN · OUT?</th><th>SCANS</th><th>HR REVIEW STATUS</th></tr></thead>
+          <tbody id="h7-${scope}-body"><tr><td colspan="6" class="h7-loading">Loading fingerprint history…</td></tr></tbody></table>
+      </div>
+      <p class="h7-footer">⚠ First/last scans are <strong>NOT approved IN/OUT or paid hours.</strong> An empty day does not prove absence; breaks, overnight shifts, duplicate punches and HR identity checks need review. Historical imports never modify live fingerprint sync or employee login links.</p>
+    </section>`;
+  }
+  function attachHistoryDashboardPanels(){
+    const overviewAnchor=document.querySelector('#page-overview .dashboard-metrics');
+    const attendanceAnchor=document.querySelector('#page-attendance .page-heading');
+    if(!overviewAnchor||!attendanceAnchor)throw Error('Required Overview/Attendance sections are missing');
+    overviewAnchor.insertAdjacentHTML('afterend',makeHistoryDashboardPanel('overview'));
+    attendanceAnchor.insertAdjacentHTML('afterend',makeHistoryDashboardPanel('attendance'));
+  }
+  const h7Scopes=['overview','attendance'];
+  function resetHistoryDashboard(){
+    state.historyData=null;state.historyFetchedAt=0;state.historyLoading=false;state.historyError=null;
+    historyReportData=null;
+    for(const scope of h7Scopes){
+      const body=$(`h7-${scope}-body`);if(body)body.innerHTML='<tr><td colspan="6" class="h7-loading">Awaiting administrator sign in.</td></tr>';
+      $(`h7-${scope}-panel`)?.classList.add('hidden');
+    }
+  }
+  function showHistoryDashboardVisibility(){
+    for(const scope of h7Scopes)$(`h7-${scope}-panel`)?.classList.toggle('hidden',!admin());
+  }
+  function historyDashboardOptions(scope){
+    const data=state.historyData; if(!data)return;
+    const emp=$(`h7-${scope}-date`);
+    if(emp && emp.options.length===1){
+      const uniqueDays=[...new Set(data.rows.map(x=>x.date))].sort().reverse();
+      emp.insertAdjacentHTML('beforeend',uniqueDays.map(x=>`<option value="${html(x)}">${html(formatDay(x))}</option>`).join(''));
+    }
+  }
+  function renderHistoryDashboard(scope){
+    const panel=$(`h7-${scope}-panel`);if(!panel)return;
+    panel.classList.toggle('hidden',!admin()); if(!admin())return;
+    const data=state.historyData;
+    const body=$(`h7-${scope}-body`);
+    if(!data){
+      body.innerHTML=`<tr><td colspan="6" class="h7-loading ${state.historyError?'h7-error':''}">${html(state.historyError||'Loading historic fingerprint records…')}</td></tr>`;
+      $(`h7-${scope}-count`).textContent=state.historyError?'Data not loaded; select Refresh history to retry.':'Loading historical records…';
+      return;
+    }
+    historyDashboardOptions(scope);
+    $(`h7-${scope}-subtitle`).textContent=`${data.week.start} to ${data.week.end} · UAE GST · Read-only candidate attendance for HR review`;
+    $(`h7-${scope}-employees`).textContent=String(data.employees);
+    $(`h7-${scope}-scans`).textContent=String(data.total_scans);
+    $(`h7-${scope}-days`).textContent=String(new Set(data.rows.map(x=>x.date)).size);
+    $(`h7-${scope}-review`).textContent=String(data.rows.filter(x=>x.count===1).length);
+    const q=($(`h7-${scope}-search`)?.value||'').trim().toLowerCase();
+    const day=$(`h7-${scope}-date`)?.value||'';
+    const status=$(`h7-${scope}-status`)?.value||'all';
+    const filtered=data.rows.filter(r=>{
+      if(q && ![r.name,r.employee_code,r.scanner_user_id].some(x=>String(x??'').toLowerCase().includes(q)))return false;
+      if(day && r.date!==day)return false;
+      if(status==='scanned' && !(r.count>0))return false;
+      if(status==='missing-out' && r.count!==1)return false;
+      if(status==='no-scan' && r.count!==0)return false;
+      return true;
+    }).sort((a,b)=>a.name.localeCompare(b.name)||b.date.localeCompare(a.date));
+    $(`h7-${scope}-count`).textContent=`${filtered.length} employee-day records shown · ${data.total_scans} raw scanner scans across ${data.employees} HR roster employees · Scroll inside table for all records`;
+    body.innerHTML=filtered.length?filtered.map(r=>`<tr>
+      <td><strong>${html(r.name)}</strong><small>${html(r.employee_code)} · Scanner ID ${html(r.scanner_user_id)}</small></td>
+      <td>${html(r.date)}</td><td class="${r.first?'':'h7-empty'}">${html(r.first||'—')}</td>
+      <td class="${r.last?'':'h7-empty'}">${html(r.last||'—')}</td><td>${Number(r.count)||0}</td>
+      <td><span class="h7-status">${html(r.status)}</span>${r.count>0&&!r.identity_verified?'<small class="h7-review">⚠ Identity needs HR verification</small>':''}</td>
+    </tr>`).join(''):'<tr><td colspan="6" class="h7-loading">No records match the selected filters.</td></tr>';
+  }
+  function renderBothHistoryDashboards(){for(const scope of h7Scopes)renderHistoryDashboard(scope);}
+  async function loadDashboardHistory(force=false){
+    if(!admin()||!state.client)return;
+    if(state.historyLoading)return;
+    if(!force && state.historyData && Date.now()-state.historyFetchedAt < 240000)return;
+    state.historyLoading=true;state.historyError=null;
+    if(!state.historyData)renderBothHistoryDashboards();
+    const userId=state.user?.id;
+    try{
+      const data=await historyApi('report');
+      if(!admin()||state.user?.id!==userId)return;
+      if(!data.week||!Array.isArray(data.rows))throw Error('Historical report returned an invalid response.');
+      const previous=state.historyData?.week?.end;
+      state.historyData=data;
+      state.historyFetchedAt=Date.now();
+      historyReportData=data;
+      if(previous && previous!==data.week.end){
+        for(const scope of h7Scopes){
+          const el=$(`h7-${scope}-date`);if(el){el.value='';el.innerHTML='<option value="">All 7 days</option>';}
+        }
+      }
+      renderBothHistoryDashboards();
+      const metric=$('metric-total');
+      if(metric && admin()){
+        metric.textContent=String(data.employees);
+        const small=metric.closest('.metric-card')?.querySelector('small');if(small)small.textContent='HR roster · login accounts separate';
+      }
+    }catch(e){
+      state.historyError=e?.message||'Unable to retrieve fingerprint history';
+      console.warn('Historical dashboard load failed:',state.historyError);
+      renderBothHistoryDashboards();
+    }finally{state.historyLoading=false;}
+  }
+
   async function sessionStart(){
     if(!state.client)return;
     const {data:{user},error}=await state.client.auth.getUser();
@@ -441,6 +608,7 @@
     const {data:profile,error:pe}=await state.client.from('profiles').select('id,email,full_name,department,job_title,role,active,web_clock_enabled').eq('id',user.id).single();
     if(pe||!profile){notify('No HRIS profile found. Contact the Administrator.',true);await state.client.auth.signOut();showLogin();return;}
     if(!profile.active){notify('Account inactive. Contact HR.',true);await state.client.auth.signOut();showLogin();return;}
+    if(state.user?.id!==user.id)resetHistoryDashboard();
     state.user=user;state.profile=profile;
     showApp();await loadData();
   }
@@ -448,7 +616,8 @@
     const p=state.profile;const now=new Date();const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dubai',hour:'2-digit',hour12:false}).format(now));
     $('greeting').textContent=`Good ${hour<12?'morning':hour<17?'afternoon':'evening'}, ${p.full_name}`;
     $('today-subtitle').textContent=`${formatDay(DAY())} · Real data from Helen & Sons Supabase`;
-    $('metric-total').textContent=String(state.people.filter(x=>x.active).length);
+    $('metric-total').textContent=String(admin()&&state.historyData?state.historyData.employees:state.people.filter(x=>x.active).length);
+    $('metric-total').closest('.metric-card').querySelector('small').textContent=admin()&&state.historyData?'HR roster · login accounts separate':'Active login accounts';
     const todayScans=state.scans.filter(s=>gstDate(s.device_local_time)===DAY());
     $('metric-in').textContent=String(todayScans.length);
     $('metric-in').closest('.metric-card').querySelector('.metric-title').textContent='Fingerprint scans today';
@@ -623,6 +792,7 @@
     const data=await historyApi('import',{rows:historyCandidateRows,confirmed:true});
     historyCandidateRows=[];historyReady=false;
     closeModal();notify(`${data.accepted} historical scans accepted/confirmed for HR review (duplicates safely ignored).`);
+    state.historyFetchedAt=0;await loadDashboardHistory(true);
   }
   function tableHistoryRows(rows){
     return rows.map(r=>`<tr><td><strong>${html(r.name)}</strong><small class="bulk-status-note">${html(r.employee_code)} · ID ${html(r.scanner_user_id)}</small></td><td>${html(r.date)}</td><td>${html(r.first||'—')}</td><td>${html(r.last||'—')}</td><td>${Number(r.count)||0}</td><td>${html(r.status)}${r.count>0&&!r.identity_verified?'<small class="bulk-status-note" style="color:#976600">Identity needs HR verification</small>':''}</td></tr>`).join('');
@@ -753,11 +923,13 @@
     if(button.id==='mobile-menu-close'||button.id==='mobile-nav-backdrop'){navMenu(false);return;}
     if(button.dataset.page){e.preventDefault();switchPage(button.dataset.page);return;}
     if(button.matches('[data-refresh]')){e.preventDefault();await actionBusy(async()=>{await loadData();notify('Latest Supabase data loaded.');});return;}
-    if(button.id==='logout-btn'){await state.client?.auth.signOut();state.user=null;state.profile=null;showLogin();return;}
+    if(button.id==='logout-btn'){await state.client?.auth.signOut();state.user=null;state.profile=null;resetHistoryDashboard();showLogin();return;}
     if(button.id==='forgot-link'){showLogin('forgot');return;}
     if(button.hasAttribute('data-back-login')){showLogin();return;}
     if(button.dataset.toggle){const input=$(button.dataset.toggle);if(input){input.type=input.type==='password'?'text':'password';button.textContent=input.type==='password'?'Show':'Hide';}return;}
     if(button.id==='top-leave-btn'){switchPage('approvals');return;}
+    if(button.hasAttribute('data-h7-reload')){await loadDashboardHistory(true);notify('Seven-day fingerprint history refreshed.');return;}
+    if(button.hasAttribute('data-h7-download')){if(admin() && state.historyData){historyReportData=state.historyData;downloadHistoryReport();}return;}
     if(button.id==='history-upload-open'){openHistoryUpload();return;}
     if(button.id==='history-report-open'){await actionBusy(()=>showHistoryReport());return;}
     if(button.id==='history-preview-btn'){await actionBusy(()=>previewHistory());return;}
@@ -787,18 +959,21 @@
     $('live-modal').addEventListener('click',e=>{if(e.target===$('live-modal'))closeModal();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
     document.addEventListener('change',e=>{if(e.target?.id==='history-filter')renderHistoryReport();});
+    document.addEventListener('change',e=>{const id=e.target?.id||'';if(id.startsWith('h7-')&&['-date','-status'].some(s=>id.endsWith(s)))renderHistoryDashboard(id.includes('h7-overview-')?'overview':'attendance');});
+    document.addEventListener('input',e=>{const id=e.target?.id||'';if(id==='h7-overview-search')renderHistoryDashboard('overview');if(id==='h7-attendance-search')renderHistoryDashboard('attendance');});
     document.addEventListener('change',e=>{if(e.target?.id==='live-date')renderTables();});
     document.addEventListener('input',e=>{if(e.target?.id==='live-staff-search')renderStaff();if(e.target?.id==='live-people-search')renderPeople();});
     const theme=(()=>{try{return localStorage.getItem('helen-sons-hris-studio-theme')==='dark'?'dark':'light';}catch{return 'light';}})();setTheme(theme);
   }
   async function init(){
     buildPages();
+    attachHistoryDashboardPanels();
     const modal=document.createElement('div');modal.id='live-modal';modal.className='modal-backdrop hidden';modal.setAttribute('aria-hidden','true');modal.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="live-modal-title"><div class="modal-top"><h2 id="live-modal-title">Employee action</h2><button class="modal-close" id="live-modal-close" type="button" aria-label="Close dialog">×</button></div><div id="live-modal-content"></div></div>';document.body.appendChild(modal);
     bindEvents();showLogin();
     const cfg=window.HRIS_CONFIG||{};
     if(!cfg.supabaseUrl||!cfg.supabasePublishableKey||!window.supabase?.createClient){notify('Supabase configuration or browser library missing. Check js/config.js and internet access.',true);return;}
     state.client=window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    state.client.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'){state.profile=null;state.user=null;showLogin();}if(event==='PASSWORD_RECOVERY')location.href='/reset-password.html';});
+    state.client.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'){state.profile=null;state.user=null;resetHistoryDashboard();showLogin();}if(event==='PASSWORD_RECOVERY')location.href='/reset-password.html';});
     await sessionStart();
     setInterval(()=>{if(state.profile){updateClock();if(state.page==='overview')renderOverview();}},1000);
     setInterval(()=>{if(state.profile&&!state.busy)loadData().catch(e=>console.warn('refresh',e?.message));},60000);
