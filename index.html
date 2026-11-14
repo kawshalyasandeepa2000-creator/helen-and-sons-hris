@@ -40,6 +40,20 @@
 #live-modal .field-clock-access label{cursor:pointer}
 
 @media(max-width:700px){.live-queue-row{align-items:start;flex-direction:column}#live-modal-content{padding:6px 14px 20px}#live-modal .modal-top{padding:16px}}
+
+/* Admin-only reviewed HR CSV staging, within existing classic localhost visual system */
+#bulk-upload-panel {margin-top:18px}
+.bulk-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;align-items:center}
+.bulk-note{font-size:13px;color:#5b6280;margin:8px 0 0;line-height:1.65}
+.bulk-table-wrap{overflow-x:auto;max-height:340px;border:1px solid #e0e3eb;border-radius:12px;margin:14px 0}
+.bulk-table-wrap table{min-width:690px;width:100%;border-collapse:collapse}
+.bulk-table-wrap td,.bulk-table-wrap th{text-align:left;border-bottom:1px solid #e5e8ee;padding:10px 12px;font-size:13px;vertical-align:top}
+.bulk-table-wrap th{background:#f5f6fa;color:#101638;position:sticky;top:0}
+.bulk-status-ready{color:#087557;font-weight:750}.bulk-status-review{color:#976600;font-weight:750}.bulk-status-error{color:#b72331;font-weight:750}
+.bulk-status-note{display:block;font-size:12px;color:#5c627c;margin:3px 0;max-width:300px;line-height:1.35}
+.bulk-import-footer{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:12px 0 0}
+#live-modal:has(.bulk-table-wrap) .modal{max-width:min(980px,95vw)}
+@media (max-width:700px){.bulk-actions{justify-content:flex-start}.bulk-import-footer{display:block}.bulk-import-footer button{margin-top:10px}}
 </style></head>
 <body>
 <div aria-live="polite" class="toast" id="toast" role="status"></div>
@@ -303,6 +317,8 @@
   const html = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const DAY = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dubai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   const state = {client:null,user:null,profile:null,people:[],staff:[],scans:[],daily:[],web:[],leaves:[],corrections:[],assets:[],page:'overview',date:DAY(),busy:false,loaded:false};
+  let bulkRows = [];
+  let bulkReviewed = false;
   const team = () => ['admin','hr','attendance_viewer'].includes(state.profile?.role);
   const admin = () => state.profile?.role==='admin';
   const manager = () => ['admin','hr'].includes(state.profile?.role);
@@ -341,7 +357,7 @@
         <div class="panel padded-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Recorded web IN/OUT</h2><p>Manual punches from HRIS are recorded separately from raw fingerprint scans.</p></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>DATE</th><th>IN</th><th>OUT</th><th>SOURCE</th></tr></thead><tbody id="live-web-body"></tbody></table></div></div>`,
       scans:`<div class="page-heading"><div><span class="eyebrow">ZKTECO DEVICE</span><h1>Fingerprint scans</h1><p>Verified raw device events from the office PC connector — no fingerprint images.</p></div><button class="btn btn-outline" data-refresh="">↻ Refresh</button></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Recent verified scans</h2><p id="live-scans-count">Loaded scanner events</p></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>SCANNER ID</th><th>DATE · GST</th><th>TIME · GST</th></tr></thead><tbody id="live-scan-body"></tbody></table></div></div>`,
       'scanner-staff':`<div class="page-heading"><div><span class="eyebrow">SCANNER IDENTITIES</span><h1>Scanner staff</h1><p>Device IDs are not login accounts. Verify real identity before linking an account to a fingerprint ID.</p></div></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Staff on fingerprint device</h2><p id="live-staff-sub">Staff directory</p></div><input class="search-input" id="live-staff-search" type="search" placeholder="Search scanner staff"></div><div class="table-scroll"><table><thead><tr><th>SCANNER ID</th><th>NAME ON DEVICE</th><th>STATUS</th><th>LINKED ACCOUNT</th><th>ADMIN ACTION</th></tr></thead><tbody id="live-staff-body"></tbody></table></div></div>`,
-      employees:`<div class="page-heading"><div><span class="eyebrow">YOUR WORKFORCE</span><h1>Employees</h1><p>Real Supabase login accounts. Send secure email invitations and assign roles without sharing passwords.</p></div><button class="btn btn-primary" id="live-invite-open" type="button">+ Invite employee</button></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Employee accounts</h2><p id="live-people-sub">Accounts with HRIS login</p></div><input type="search" class="search-input" id="live-people-search" placeholder="Search employees"></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>EMAIL</th><th>DEPARTMENT</th><th>ROLE</th><th>STATUS</th><th>ACCESS</th></tr></thead><tbody id="live-people-body"></tbody></table></div></div><div class="info-panel"><span>ⓘ</span><div><strong>34 scanner IDs ≠ 34 logins</strong><p>Invite each employee with their own email. After checking their real identity, link the correct scanner user ID in Scanner staff. Web Clock IN/OUT is OFF by default; the Admin may turn it on in Manage access for off-site field staff. HR Manager can review requests; Attendance Viewer is read-only.</p></div></div>`,
+      employees:`<div class="page-heading"><div><span class="eyebrow">YOUR WORKFORCE</span><h1>Employees</h1><p>Real Supabase login accounts. Send secure email invitations and assign roles without sharing passwords.</p></div><button class="btn btn-primary" id="live-invite-open" type="button">+ Invite employee</button></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Employee accounts</h2><p id="live-people-sub">Accounts with HRIS login</p></div><input type="search" class="search-input" id="live-people-search" placeholder="Search employees"></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>EMAIL</th><th>DEPARTMENT</th><th>ROLE</th><th>STATUS</th><th>ACCESS</th></tr></thead><tbody id="live-people-body"></tbody></table></div></div><div class="panel padded-panel hidden" id="bulk-upload-panel"><div class="panel-title-row"><div><h2>Bulk employee upload</h2><p>Import the HR-confirmed employee list from Excel (save as CSV UTF-8) without making accidental fingerprint links.</p></div><div class="bulk-actions"><button class="btn btn-outline" id="bulk-template-download" type="button">↓ CSV template</button><button class="btn btn-outline" id="bulk-roster-view" type="button">Review imported roster</button><button class="btn btn-primary" id="bulk-upload-open" type="button">↑ Bulk upload CSV</button></div></div><p class="bulk-note">Separate columns: <strong>HR Employee ID</strong> and <strong>Fingerprint Scanner ID</strong>. First preview and validate, then confirm import. Invitations are a separate deliberate step. Only the Administrator can use this tool.</p></div><div class="info-panel"><span>ⓘ</span><div><strong>34 scanner IDs ≠ 34 logins</strong><p>Invite each employee with their own email. After checking their real identity, link the correct scanner user ID in Scanner staff. Web Clock IN/OUT is OFF by default; the Admin may turn it on in Manage access for off-site field staff. HR Manager can review requests; Attendance Viewer is read-only.</p></div></div>`,
       leaves:`<div class="page-heading"><div><span class="eyebrow">PEOPLE OPERATIONS</span><h1>Leave applications</h1><p>Send a real leave request and follow its HR review status.</p></div></div><div class="correction-layout"><div class="panel padded-panel"><span class="panel-kicker">EMPLOYEE REQUEST</span><h2>Request leave</h2><form class="stack-form" id="live-leave-form"><label for="ll-type">Leave type</label><select id="ll-type" required><option value="annual">Annual leave</option><option value="sick">Sick leave</option><option value="emergency">Emergency leave</option><option value="unpaid">Unpaid leave</option><option value="other">Other leave</option></select><div class="form-row"><div><label for="ll-from">Start date</label><input id="ll-from" type="date" required></div><div><label for="ll-to">End date</label><input id="ll-to" type="date" required></div></div><label for="ll-reason">Reason</label><textarea id="ll-reason" required minlength="5" maxlength="1000" rows="3" placeholder="Brief reason for leave"></textarea><button class="btn btn-primary full" type="submit">Submit leave request ↗</button></form></div><div class="panel padded-panel"><span class="panel-kicker">MY APPLICATIONS</span><h2>Request status</h2><p>Requests are reviewed by Admin or HR Manager. Leave balances are not calculated yet.</p><div class="info-card"><strong>Important</strong><p>Approval is a request decision, not automatic payroll or leave-balance posting.</p></div></div></div><div class="panel data-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Leave requests</h2><p>Requests visible under your account permissions</p></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>TYPE</th><th>DATES</th><th>STATUS</th><th>REASON</th><th>REVIEW</th></tr></thead><tbody id="live-leaves-body"></tbody></table></div></div>`,
       approvals:`<div class="page-heading"><div><span class="eyebrow">HR APPROVALS</span><h1>Review requests</h1><p>HR Manager and Administrator can approve/reject another employee's pending request.</p></div></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Leave approvals</h2></div></div><div id="live-approve-leaves"></div></div><div class="panel data-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Time correction approvals</h2><p>Decisions are tracked separately; they do not overwrite raw scanner events.</p></div></div><div id="live-approve-corrections"></div></div>`,
       corrections:`<div class="page-heading"><div><span class="eyebrow">ATTENDANCE ACCURACY</span><h1>Time corrections</h1><p>Report a missing or wrong fingerprint punch. Original scanner logs are never overwritten.</p></div></div><div class="correction-layout"><div class="panel padded-panel"><span class="panel-kicker">EMPLOYEE REQUEST</span><h2>Request an attendance correction</h2><form class="stack-form" id="live-correction-form"><label for="lc-date">Attendance date</label><input id="lc-date" type="date" required><div class="form-row"><div><label for="lc-in">Proposed IN · GST</label><input id="lc-in" type="time"></div><div><label for="lc-out">Proposed OUT · GST</label><input id="lc-out" type="time"></div></div><label for="lc-reason">Reason</label><textarea id="lc-reason" required minlength="5" maxlength="1000" rows="3" placeholder="Explain what scan was missing or wrong"></textarea><button class="btn btn-primary full" type="submit">Submit correction request ↗</button></form></div><div class="panel padded-panel"><span class="panel-kicker">MY CORRECTIONS</span><h2>Correction history</h2><p>Review decisions never modify the original fingerprint events. Payroll calculation needs a separate approved attendance workflow.</p></div></div><div class="panel data-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Time correction requests</h2></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>DATE</th><th>PROPOSED IN / OUT</th><th>STATUS</th><th>REASON</th><th>REVIEW</th></tr></thead><tbody id="live-corrections-body"></tbody></table></div></div>`,
@@ -410,12 +426,6 @@
     if(admin())requests.push(safely(c.from('company_assets').select('id,asset_tag,category,asset_name,identifier,brand,model,status,assigned_to,notes').order('created_at',{ascending:false}).limit(250),'company assets'));
     const data=await Promise.all(requests);
     [state.people,state.staff,state.scans,state.daily,state.web,state.leaves,state.corrections]=data;
-    // Keep permission changes current after the 60-second refresh without requiring a new sign-in.
-    const updatedSelf=state.people.find(p=>p.id===state.user.id);
-    if(updatedSelf){
-      if(!updatedSelf.active){await state.client.auth.signOut();notify('Account access has been suspended.',true);return;}
-      state.profile=updatedSelf;
-    }
     state.assets=admin()?data[7]:[];
     if(!state.people.some(p=>p.id===state.profile.id))state.people.push(state.profile);
     state.loaded=true;
@@ -494,6 +504,7 @@
     }).join(''):'<tr><td colspan="5" class="empty-row">No matching scanner IDs.</td></tr>';
   }
   function renderPeople(){
+    $('bulk-upload-panel')?.classList.toggle('hidden',!admin());
     $('live-invite-open')?.classList.toggle('hidden',!admin());
     const q=($('live-people-search')?.value||'').toLowerCase().trim();
     const list=state.people.filter(p=>[p.full_name,p.email,p.department,p.role].join(' ').toLowerCase().includes(q));
@@ -530,6 +541,93 @@
   }
   async function actionBusy(fn){if(state.busy)return;state.busy=true;try{await fn();await loadData();}catch(e){notify(e?.message||'Unable to save changes.',true);}finally{state.busy=false;}}
   const accountChoices=()=>state.people.map(p=>`<option value="${html(p.id)}">${html(p.full_name)} (${html(p.email)})</option>`).join('');
+  /* Bulk CSV import is explicitly staged. Never auto-link a fingerprint ID. */
+  async function bulkApi(action,params={}){
+    if(!admin())throw Error('Administrator access required');
+    const {data,error}=await state.client.functions.invoke('hris-roster-bulk',{body:{action,...params}});
+    if(error){let message=error.message||'Bulk API unavailable';try{const extra=await error.context?.json();message=extra?.error||message;}catch{}throw Error(message);}
+    if(!data?.ok)throw Error(data?.error||'Bulk action failed');
+    return data;
+  }
+  function downloadBulkTemplate(){
+    const csv='\uFEFFemployee_code,email,full_name,scanner_user_id,department,job_title,role\r\n';
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),href=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=href;a.download='Helen_Sons_HR_Bulk_Employee_Template.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(href),1500);
+  }
+  function parseBulkCsv(text){
+    const cells=[];let row=[],value='',quoted=false;
+    for(let i=0;i<text.length;i++){
+      const c=text[i];
+      if(quoted){if(c==='"'&&text[i+1]==='"'){value+='"';i++;}else if(c==='"'){quoted=false;}else{value+=c;}continue;}
+      if(c==='"'){if(value.length)throw Error('Invalid CSV quotation near row '+(cells.length+2));quoted=true;continue;}
+      if(c===','){row.push(value.trim());value='';continue;}
+      if(c==='\n'||c==='\r'){
+        if(c==='\r'&&text[i+1]==='\n')i++;
+        row.push(value.trim());if(row.some(x=>x!==''))cells.push(row);row=[];value='';continue;
+      }
+      value+=c;
+    }
+    if(quoted)throw Error('CSV quotation is incomplete');
+    row.push(value.trim());if(row.some(x=>x!==''))cells.push(row);
+    if(cells.length<2)throw Error('CSV must have a header and at least one employee');
+    const cols=cells.shift().map(x=>x.replace(/^\uFEFF/,'').trim().toLowerCase().replace(/[\s-]+/g,'_'));
+    const wanted=['employee_code','email','full_name'];
+    for(const name of wanted)if(!cols.includes(name)&&!(name==='employee_code'&&cols.includes('employee_id')))throw Error('Missing CSV column: '+name);
+    if(cells.length>100)throw Error('Maximum 100 employees per upload');
+    return cells.map((parts,i)=>{
+      if(parts.length!==cols.length)throw Error('CSV row '+(i+2)+' has '+parts.length+' columns; expected '+cols.length);
+      const obj={};cols.forEach((k,j)=>{obj[k]=parts[j]||'';});
+      if(!obj.employee_code&&obj.employee_id)obj.employee_code=obj.employee_id;
+      return {employee_code:obj.employee_code||'',email:obj.email||'',full_name:obj.full_name||'',scanner_user_id:obj.scanner_user_id||'',department:obj.department||'',job_title:obj.job_title||'',role:obj.role||'employee'};
+    });
+  }
+  function bulkUploadDialog(){
+    if(!admin())return;
+    bulkRows=[];bulkReviewed=false;
+    openModal('Bulk import · HR-confirmed employee list',`<div class="stack-form"><p>1. Download the CSV template and fill the HR-approved employee details. Save the Excel sheet as <strong>CSV UTF-8</strong>. Limit: 100 rows.</p><p><strong>employee_code</strong> is HR Employee ID; <strong>scanner_user_id</strong> is optional device ID. Never use the email address as a scanner ID. Optional role: employee, attendance_viewer, hr.</p><input id="bulk-csv-file" type="file" accept=".csv,text/csv" aria-label="Select HR CSV file"><p class="bulk-note">Preview does not save anything. Import does not send emails, create accounts or link fingerprints.</p><button type="button" class="btn btn-primary" id="bulk-preview-btn">Preview and validate file →</button><div id="bulk-preview-results" aria-live="polite"></div></div>`);
+  }
+  function bulkReviewHtml(x){
+    const messages=[...(x.issues||[]),...(x.warnings||[])];
+    return `<tr><td>${html(x.line||'')}</td><td><strong>${html(x.row?.employee_code||'—')}</strong></td><td>${html(x.row?.full_name||'—')}<small class="bulk-status-note">${html(x.row?.email||'')}</small></td><td>${html(x.row?.scanner_user_id||'—')}</td><td><span class="bulk-status-${html(x.status||'error')}">${html(x.status||'error')}</span>${messages.map(m=>`<small class="bulk-status-note">${html(m)}</small>`).join('')}</td></tr>`;
+  }
+  async function previewBulk(){
+    const file=$('bulk-csv-file')?.files?.[0];if(!file)throw Error('Choose a CSV file first');
+    if(file.size>110000)throw Error('CSV file is too large; maximum 100 rows');
+    const rows=parseBulkCsv(await file.text());
+    const data=await bulkApi('preview',{rows});
+    bulkRows=rows;bulkReviewed=data.summary.errors===0;
+    const s=data.summary;
+    $('bulk-preview-results').innerHTML=`<div class="bulk-import-footer"><strong>${s.total} employees · ${s.ready} ready · ${s.review} need identity review · ${s.errors} errors</strong></div><div class="bulk-table-wrap"><table><thead><tr><th>CSV ROW</th><th>HR EMP ID</th><th>EMPLOYEE</th><th>SCANNER ID</th><th>RESULT</th></tr></thead><tbody>${data.rows.map(bulkReviewHtml).join('')}</tbody></table></div><p class="bulk-note">Yellow = HR must verify before linking fingerprint IDs. Red = fix CSV before importing. Import saves the roster only; login invitations are sent separately.</p>${s.errors?'':'<button type="button" class="btn btn-primary" id="bulk-import-btn">Confirm and import '+s.total+' roster rows →</button>'}`;
+  }
+  async function confirmBulkImport(){
+    if(!bulkReviewed||!bulkRows.length)throw Error('Run a successful preview first');
+    if(!confirm('Save '+bulkRows.length+' HR roster rows? No email invitations or scanner links will be created.'))return;
+    const data=await bulkApi('import',{rows:bulkRows,confirmed:true});
+    bulkRows=[];bulkReviewed=false;
+    closeModal();notify(data.imported+' HR employee records staged. No invitation emails sent.');
+  }
+  async function rosterDialog(){
+    if(!admin())return;
+    const data=await bulkApi('list');
+    const table=data.rows.map(r=>{
+      const account=state.people.some(p=>p.email?.toLowerCase()===r.email?.toLowerCase());
+      const stat=r.invited_at?'Invitation requested':account?'Existing login · no invite needed':'Not invited';
+      const checkbox=(!r.invited_at&&!account)?`<input type="checkbox" data-bulk-roster-select value="${html(r.id)}" aria-label="Invite ${html(r.email)}">`:'—';
+      return `<tr><td>${checkbox}</td><td><strong>${html(r.employee_code)}</strong></td><td>${html(r.full_name)}<small class="bulk-status-note">${html(r.email)}</small></td><td>${html(r.scanner_user_id||'Not provided')}</td><td>${html(roleText(r.desired_role))}</td><td>${html(stat)}</td></tr>`;
+    }).join('');
+    openModal('Imported HR roster · Invitations',`<p>${data.rows.length} staged employee(s). Only new users can be invited. Select up to 3, then confirm. Email delivery may be rate-limited by Supabase.</p><div class="bulk-table-wrap"><table><thead><tr><th>INVITE</th><th>HR EMP ID</th><th>EMPLOYEE</th><th>SCANNER ID</th><th>ROLE</th><th>STATUS</th></tr></thead><tbody>${table||'<tr><td colspan="6">No HR roster imported yet.</td></tr>'}</tbody></table></div><div class="bulk-import-footer"><span class="bulk-note">Fingerprint ID matches require separate HR verification and manual linking.</span><button class="btn btn-primary" type="button" id="bulk-send-invites">Send selected invitations →</button></div>`);
+  }
+  async function sendBulkInvites(){
+    if(!admin())throw Error('Admin only');
+    const ids=[...document.querySelectorAll('[data-bulk-roster-select]:checked')].map(x=>x.value);
+    if(!ids.length||ids.length>3)throw Error('Choose 1–3 employees at a time');
+    if(!confirm('Send '+ids.length+' real HRIS invitation email(s) now? Employees set their own passwords.'))return;
+    const res=await bulkApi('invite',{ids,confirmed:true});
+    const sent=res.results.filter(x=>x.status==='invited'||x.status==='sent_needs_review').length;
+    const errs=res.results.filter(x=>x.status==='error').map(x=>x.email+': '+(x.message||'Failed'));
+    await loadData();await rosterDialog();
+    notify(sent+' invitation(s) requested.'+(errs.length?' Issues: '+errs.join('; '):''),errs.length>0);
+  }
   function inviteDialog(){openModal('Invite an employee',`<form id="lm-invite" class="stack-form"><p>Employee receives an email link and chooses their own password. One employee per unique email.</p><label for="mi-name">Full name *</label><input id="mi-name" required maxlength="120"><label for="mi-email">Email *</label><input id="mi-email" type="email" autocomplete="off" required><div class="form-row"><div><label for="mi-dept">Department</label><input id="mi-dept" maxlength="100"></div><div><label for="mi-title">Job title</label><input id="mi-title" maxlength="100"></div></div><label for="mi-role">Access role</label><select id="mi-role"><option value="employee">Employee · own data</option><option value="attendance_viewer">Attendance Viewer · read-only</option><option value="hr">HR Manager · review requests</option></select><button class="btn btn-primary" type="submit">Send secure email invitation →</button></form>`);}
   function accessDialog(id){const p=state.people.find(x=>x.id===id);if(!p||p.role==='admin'||p.id===state.user.id)return;openModal('Manage employee access',`<form id="lm-access" class="stack-form"><input type="hidden" id="ma-id" value="${html(p.id)}"><p>${html(p.full_name)} · ${html(p.email)}</p><label for="ma-role">Role</label><select id="ma-role"><option value="employee" ${p.role==='employee'?'selected':''}>Employee</option><option value="attendance_viewer" ${p.role==='attendance_viewer'?'selected':''}>Attendance Viewer</option><option value="hr" ${p.role==='hr'?'selected':''}>HR Manager</option></select><label for="ma-status">Account status</label><select id="ma-status"><option value="true" ${p.active?'selected':''}>Active</option><option value="false" ${!p.active?'selected':''}>Inactive / suspend access</option></select><div class="field-clock-access"><input id="ma-web-clock" type="checkbox" ${p.web_clock_enabled?'checked':''}><label for="ma-web-clock"><strong>Enable Web Clock IN / OUT · Field staff</strong><small>OFF by default. Enable only for employees working outside the fingerprint-scanner office. Fingerprint syncing does not require this permission. Read-only Attendance Viewers cannot use web punching.</small></label></div><button type="submit" class="btn btn-primary">Save access →</button></form>`);}
   function staffDialog(id,device,mode){const s=state.staff.find(x=>x.scanner_user_id===id&&x.device_key===device);if(!s)return;
@@ -595,6 +693,12 @@
     if(button.hasAttribute('data-back-login')){showLogin();return;}
     if(button.dataset.toggle){const input=$(button.dataset.toggle);if(input){input.type=input.type==='password'?'text':'password';button.textContent=input.type==='password'?'Show':'Hide';}return;}
     if(button.id==='top-leave-btn'){switchPage('approvals');return;}
+    if(button.id==='bulk-template-download'){if(admin())downloadBulkTemplate();return;}
+    if(button.id==='bulk-upload-open'){bulkUploadDialog();return;}
+    if(button.id==='bulk-roster-view'){await actionBusy(()=>rosterDialog());return;}
+    if(button.id==='bulk-preview-btn'){await actionBusy(()=>previewBulk());return;}
+    if(button.id==='bulk-import-btn'){await actionBusy(()=>confirmBulkImport());return;}
+    if(button.id==='bulk-send-invites'){await actionBusy(()=>sendBulkInvites());return;}
     if(button.id==='live-invite-open'){inviteDialog();return;}
     if(button.dataset.manageAccount){accessDialog(button.dataset.manageAccount);return;}
     if(button.dataset.verifyStaff){staffDialog(button.dataset.verifyStaff,button.dataset.device,'verify');return;}
