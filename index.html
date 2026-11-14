@@ -356,7 +356,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   const $ = id => document.getElementById(id);
   const html = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const DAY = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dubai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-  const state = {client:null,user:null,profile:null,people:[],staff:[],scans:[],daily:[],web:[],leaves:[],corrections:[],assets:[],historyData:null,historyFetchedAt:0,historyLoading:false,historyError:null,page:'overview',date:DAY(),busy:false,loaded:false};
+  const state = {client:null,user:null,profile:null,people:[],staff:[],scans:[],daily:[],web:[],leaves:[],corrections:[],assets:[],historyData:null,historyFetchedAt:0,historyLoading:false,historyError:null,teamData:null,teamLoading:false,teamError:null,teamFetchedAt:0,teamDate:DAY(),page:'overview',date:DAY(),busy:false,loaded:false};
   let bulkRows = [];
   let bulkReviewed = false;
   let historyCandidateRows = [];
@@ -440,6 +440,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     $('top-alert-btn')?.classList.add('hidden');
     const header=$('live-system-alert');if(header)header.textContent=(team()?'LIVE SUPABASE · Team scans are raw data; HR review is required before payroll.':'LIVE SUPABASE · Your own attendance and HR requests only.');
     showHistoryDashboardVisibility();
+    showTeamDashboardVisibility();
     switchPage(state.page);
   }
   function switchPage(page){
@@ -474,14 +475,99 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     if(!state.people.some(p=>p.id===state.profile.id))state.people.push(state.profile);
     state.loaded=true;
     renderCurrent();
-    if(admin())void loadDashboardHistory();
+    if(manager()){void loadDashboardHistory();void loadTeamDashboard();}
+  }
+
+  /* DAILY TEAM FINGERPRINT SUMMARY (ADMIN + HR): no payroll approval, no login linking. */
+  const teamScopes=['overview','attendance'];
+  function makeTeamPanel(scope){
+    return `<section id="team-${scope}-panel" class="panel data-panel h7-main-panel hidden" aria-label="Verified team fingerprint first and last scans">
+      <div class="h7-panel-header"><div><span class="panel-kicker">HR-VERIFIED STAFF · LIVE FINGERPRINT ATTENDANCE</span>
+        <h2>All 17 staff · Daily IN? / OUT? scans</h2><p id="team-${scope}-subtitle">UAE time · Awaiting today's scanner data…</p></div>
+        <div class="h7-actions"><button type="button" class="btn btn-outline" data-team-reload>↻ Refresh scans</button><button type="button" class="btn btn-primary" data-team-export>↓ Download CSV</button></div></div>
+      <div class="h7-stats"><div class="h7-stat"><strong id="team-${scope}-staff">—</strong><small>Verified HR staff</small></div>
+        <div class="h7-stat"><strong id="team-${scope}-scans">—</strong><small>Fingerprint scans on selected date</small></div>
+        <div class="h7-stat"><strong id="team-${scope}-out">—</strong><small>Days with 2+ scans (OUT candidate)</small></div>
+        <div class="h7-stat"><strong id="team-${scope}-one">—</strong><small>Only one scan / OUT not confirmed</small></div></div>
+      <div class="h7-filter-bar"><label>Date (UAE)<input type="date" id="team-${scope}-date" value="${html(state.teamDate)}" /></label>
+        <label>Employee<input type="search" id="team-${scope}-search" placeholder="Name, HR code or scanner ID" /></label></div>
+      <p class="h7-footer" id="team-${scope}-status" aria-live="polite">Loading verified team scans…</p>
+      <div class="h7-table-viewport" role="region" tabindex="0" aria-label="Verified 17 staff attendance">
+      <table><thead><tr><th>EMPLOYEE / CODE</th><th>UAE DATE</th><th>FIRST SCAN · IN?</th><th>LAST SCAN · OUT?</th><th>SCANS</th><th>REVIEW</th></tr></thead>
+      <tbody id="team-${scope}-body"><tr><td colspan="6" class="h7-loading">Loading…</td></tr></tbody></table></div>
+      <p class="h7-footer">⚠ Times are <strong>recorded first/last fingerprint scans, not confirmed IN/OUT, payroll hours or absence.</strong>
+        No recorded scan does not prove absence. Night shifts, lunch punches and scanner gaps need HR review. New scans arrive only while the Office PC's approved live connector is running.</p></section>`;
+  }
+  function attachTeamPanels(){
+    const ov=document.querySelector('#page-overview .dashboard-metrics');
+    const at=document.querySelector('#page-attendance .page-heading');
+    if(!ov||!at)throw Error('Missing dashboard sections for team attendance');
+    ov.insertAdjacentHTML('afterend',makeTeamPanel('overview'));
+    at.insertAdjacentHTML('afterend',makeTeamPanel('attendance'));
+  }
+  function resetTeamDashboard(){
+    state.teamData=null;state.teamError=null;state.teamFetchedAt=0;state.teamLoading=false;state.teamDate=DAY();
+    for(const scope of teamScopes){
+      $(`team-${scope}-panel`)?.classList.add('hidden');
+      const body=$(`team-${scope}-body`);if(body)body.innerHTML='<tr><td colspan="6">Awaiting authorized HR sign-in.</td></tr>';
+      const date=$(`team-${scope}-date`);if(date)date.value=state.teamDate;
+    }
+  }
+  function showTeamDashboardVisibility(){
+    for(const scope of teamScopes)$(`team-${scope}-panel`)?.classList.toggle('hidden',!manager());
+  }
+  function renderTeamDashboard(scope){
+    const panel=$(`team-${scope}-panel`);if(!panel)return;
+    panel.classList.toggle('hidden',!manager());if(!manager())return;
+    const d=state.teamData,body=$(`team-${scope}-body`);
+    const date=$(`team-${scope}-date`);if(date)date.value=state.teamDate;
+    if(!d){
+      $(`team-${scope}-status`).textContent=state.teamError||'Loading live team attendance…';
+      body.innerHTML=`<tr><td colspan="6" class="h7-loading ${state.teamError?'h7-error':''}">${html(state.teamError||'Loading live team attendance…')}</td></tr>`;
+      return;
+    }
+    $(`team-${scope}-subtitle`).textContent=`${d.date} · Asia/Dubai (GST) · Admin & HR secure daily report`;
+    $(`team-${scope}-staff`).textContent=String(d.employees);
+    $(`team-${scope}-scans`).textContent=String(d.total_scans);
+    $(`team-${scope}-out`).textContent=String(d.rows.filter(x=>x.count>=2).length);
+    $(`team-${scope}-one`).textContent=String(d.rows.filter(x=>x.count===1).length);
+    const query=($(`team-${scope}-search`)?.value||'').toLowerCase().trim();
+    const rows=d.rows.filter(r=>!query||[r.employee_code,r.name,r.scanner_user_id].some(v=>String(v||'').toLowerCase().includes(query)))
+      .sort((a,b)=>a.name.localeCompare(b.name));
+    $(`team-${scope}-status`).textContent=`${rows.length} of ${d.employees} approved employees · ${d.total_scans} recorded scans · Last refreshed ${new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dubai',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(state.teamFetchedAt))} GST`;
+    body.innerHTML=rows.map(r=>`<tr><td><strong>${html(r.name)}</strong><small>${html(r.employee_code)} · Scanner ID ${html(r.scanner_user_id)}</small></td>
+      <td>${html(r.date)}</td><td>${html(r.first||'—')}</td><td>${html(r.last||'—')}</td><td>${Number(r.count)||0}</td><td><span class="h7-status">${html(r.status)}</span></td></tr>`).join('')||'<tr><td colspan="6" class="h7-loading">No matching staff.</td></tr>';
+  }
+  function renderBothTeamDashboards(){for(const scope of teamScopes)renderTeamDashboard(scope);}
+  async function loadTeamDashboard(force=false){
+    if(!manager()||!state.client||state.teamLoading)return;
+    if(!force&&state.teamData&&state.teamData.date===state.teamDate&&Date.now()-state.teamFetchedAt<45000)return;
+    state.teamLoading=true;state.teamError=null;
+    const uid=state.user?.id,requestedDate=state.teamDate;
+    try{
+      const {data,error}=await state.client.functions.invoke('hris-team-attendance',{body:{action:'report',date:requestedDate}});
+      if(error){let msg=error.message||'Team scanner API not available';try{const extra=await error.context?.json();msg=extra?.error||msg;}catch{}throw Error(msg);}
+      if(!data?.ok||!Array.isArray(data.rows))throw Error(data?.error||'Invalid team attendance response');
+      if(!manager()||state.user?.id!==uid||state.teamDate!==requestedDate)return;
+      state.teamData=data;state.teamFetchedAt=Date.now();
+    }catch(e){state.teamError=e?.message||'Unable to load team attendance';console.warn('Team attendance:',state.teamError);}
+    finally{state.teamLoading=false;renderBothTeamDashboards();}
+  }
+  function downloadTeamCsv(){
+    if(!manager()||!state.teamData)return;
+    const r=state.teamData;
+    const rows=[['EMPLOYEE_CODE','EMPLOYEE_NAME','SCANNER_ID','DATE_UAE','FIRST_SCAN_IN_CANDIDATE','LAST_SCAN_OUT_CANDIDATE','PUNCH_COUNT','STATUS'],
+      ...r.rows.map(x=>[x.employee_code,x.name,x.scanner_user_id,x.date,x.first||'',x.last||'',x.count,x.status])];
+    const data='\uFEFF'+rows.map(row=>row.map(csvValue).join(',')).join('\r\n');
+    const url=URL.createObjectURL(new Blob([data],{type:'text/csv;charset=utf-8'}));
+    const a=document.createElement('a');a.href=url;a.download=`Helen_Sons_Team_Fingerprint_${r.date}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
   }
 
   /* The HR roster scan history is stored separately from payroll and the live attendance table. */
   function makeHistoryDashboardPanel(scope){
     return `<section class="panel data-panel h7-main-panel hidden" id="h7-${scope}-panel" aria-label="Historical fingerprint attendance last seven UAE days">
       <div class="h7-panel-header">
-        <div><span class="panel-kicker">FINGERPRINT HISTORY · ADMIN REVIEW</span><h2>Last 7 days · All employee IN / OUT candidates</h2>
+        <div><span class="panel-kicker">FINGERPRINT HISTORY · ADMIN & HR REVIEW</span><h2>Last 7 days · All employee IN / OUT candidates</h2>
           <p id="h7-${scope}-subtitle">UAE time (GST) · Loading the HR roster's recorded scans…</p></div>
         <div class="h7-actions"><button type="button" class="btn btn-outline" data-h7-reload>↻ Refresh history</button>
           <button type="button" class="btn btn-primary" data-h7-download>↓ Export all 7 days CSV</button></div>
@@ -515,14 +601,14 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   const h7Scopes=['overview','attendance'];
   function resetHistoryDashboard(){
     state.historyData=null;state.historyFetchedAt=0;state.historyLoading=false;state.historyError=null;
-    historyReportData=null;
+    historyReportData=null;resetTeamDashboard();
     for(const scope of h7Scopes){
       const body=$(`h7-${scope}-body`);if(body)body.innerHTML='<tr><td colspan="6" class="h7-loading">Awaiting administrator sign in.</td></tr>';
       $(`h7-${scope}-panel`)?.classList.add('hidden');
     }
   }
   function showHistoryDashboardVisibility(){
-    for(const scope of h7Scopes)$(`h7-${scope}-panel`)?.classList.toggle('hidden',!admin());
+    for(const scope of h7Scopes)$(`h7-${scope}-panel`)?.classList.toggle('hidden',!manager());
   }
   function historyDashboardOptions(scope){
     const data=state.historyData; if(!data)return;
@@ -534,7 +620,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   }
   function renderHistoryDashboard(scope){
     const panel=$(`h7-${scope}-panel`);if(!panel)return;
-    panel.classList.toggle('hidden',!admin()); if(!admin())return;
+    panel.classList.toggle('hidden',!manager()); if(!manager())return;
     const data=state.historyData;
     const body=$(`h7-${scope}-body`);
     if(!data){
@@ -569,7 +655,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   }
   function renderBothHistoryDashboards(){for(const scope of h7Scopes)renderHistoryDashboard(scope);}
   async function loadDashboardHistory(force=false){
-    if(!admin()||!state.client)return;
+    if(!manager()||!state.client)return;
     if(state.historyLoading)return;
     if(!force && state.historyData && Date.now()-state.historyFetchedAt < 240000)return;
     state.historyLoading=true;state.historyError=null;
@@ -577,7 +663,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     const userId=state.user?.id;
     try{
       const data=await historyApi('report');
-      if(!admin()||state.user?.id!==userId)return;
+      if(!manager()||state.user?.id!==userId)return;
       if(!data.week||!Array.isArray(data.rows))throw Error('Historical report returned an invalid response.');
       const previous=state.historyData?.week?.end;
       state.historyData=data;
@@ -590,7 +676,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
       }
       renderBothHistoryDashboards();
       const metric=$('metric-total');
-      if(metric && admin()){
+      if(metric && manager()){
         metric.textContent=String(data.employees);
         const small=metric.closest('.metric-card')?.querySelector('small');if(small)small.textContent='HR roster · login accounts separate';
       }
@@ -616,10 +702,10 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     const p=state.profile;const now=new Date();const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dubai',hour:'2-digit',hour12:false}).format(now));
     $('greeting').textContent=`Good ${hour<12?'morning':hour<17?'afternoon':'evening'}, ${p.full_name}`;
     $('today-subtitle').textContent=`${formatDay(DAY())} · Real data from Helen & Sons Supabase`;
-    $('metric-total').textContent=String(admin()&&state.historyData?state.historyData.employees:state.people.filter(x=>x.active).length);
-    $('metric-total').closest('.metric-card').querySelector('small').textContent=admin()&&state.historyData?'HR roster · login accounts separate':'Active login accounts';
+    $('metric-total').textContent=String(manager()&&(state.teamData||state.historyData)?(state.teamData?.employees||state.historyData?.employees):state.people.filter(x=>x.active).length);
+    $('metric-total').closest('.metric-card').querySelector('small').textContent=manager()&&(state.teamData||state.historyData)?'HR roster · login accounts separate':'Active login accounts';
     const todayScans=state.scans.filter(s=>gstDate(s.device_local_time)===DAY());
-    $('metric-in').textContent=String(todayScans.length);
+    $('metric-in').textContent=String(manager()&&state.teamData?.date===DAY()?state.teamData.total_scans:todayScans.length);
     $('metric-in').closest('.metric-card').querySelector('.metric-title').textContent='Fingerprint scans today';
     $('metric-in').closest('.metric-card').querySelector('small').textContent='Verified raw scans · not IN count';
     $('metric-late').textContent='—';
@@ -703,7 +789,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     const p=state.profile;$('live-account-name').textContent=p.full_name;$('live-account-email').textContent=p.email;$('live-account-role').textContent='Role: '+roleText(p.role);$('live-account-dept').textContent=`Department: ${p.department||'Not set'} · Position: ${p.job_title||'Not set'}`;
   }
   function updateClock(){const n=new Date();const t=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dubai',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(n);$('live-clock').textContent=t;$('clock-date').textContent='GST · UTC+4';}
-  function renderCurrent(){if(!state.profile)return;renderOverview();renderTables();renderStaff();renderPeople();renderRequests();renderAssets();renderAccount();updateClock();}
+  function renderCurrent(){if(!state.profile)return;renderOverview();renderBothTeamDashboards();renderTables();renderStaff();renderPeople();renderRequests();renderAssets();renderAccount();updateClock();}
   const field=(id)=>$(id)?.value?.trim()||'';
   function openModal(title,body){$('live-modal-title').textContent=title;$('live-modal-content').innerHTML=body;$('live-modal').classList.remove('hidden');$('live-modal').setAttribute('aria-hidden','false');$('live-modal-content').querySelector('input,select,button')?.focus();}
   function closeModal(){$('live-modal')?.classList.add('hidden');$('live-modal')?.setAttribute('aria-hidden','true');$('live-modal-content').innerHTML='';}
@@ -755,7 +841,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     });
   }
   async function historyApi(action, params={}){
-    if(!admin())throw Error('Administrator access required');
+    if(action==='report'?!manager():!admin())throw Error('Admin/HR role required');
     const {data,error}=await state.client.functions.invoke('hris-historical-attendance',{body:{action,...params}});
     if(error){let message=error.message||'History API unavailable';try{const extra=await error.context?.json();message=extra?.error||message;}catch{}throw Error(message);}
     if(!data?.ok)throw Error(data?.error||'History action failed');
@@ -928,8 +1014,10 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     if(button.hasAttribute('data-back-login')){showLogin();return;}
     if(button.dataset.toggle){const input=$(button.dataset.toggle);if(input){input.type=input.type==='password'?'text':'password';button.textContent=input.type==='password'?'Show':'Hide';}return;}
     if(button.id==='top-leave-btn'){switchPage('approvals');return;}
+    if(button.hasAttribute('data-team-reload')){await loadTeamDashboard(true);notify('Team attendance refreshed.');return;}
+    if(button.hasAttribute('data-team-export')){downloadTeamCsv();return;}
     if(button.hasAttribute('data-h7-reload')){await loadDashboardHistory(true);notify('Seven-day fingerprint history refreshed.');return;}
-    if(button.hasAttribute('data-h7-download')){if(admin() && state.historyData){historyReportData=state.historyData;downloadHistoryReport();}return;}
+    if(button.hasAttribute('data-h7-download')){if(manager() && state.historyData){historyReportData=state.historyData;downloadHistoryReport();}return;}
     if(button.id==='history-upload-open'){openHistoryUpload();return;}
     if(button.id==='history-report-open'){await actionBusy(()=>showHistoryReport());return;}
     if(button.id==='history-preview-btn'){await actionBusy(()=>previewHistory());return;}
@@ -959,6 +1047,11 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     $('live-modal').addEventListener('click',e=>{if(e.target===$('live-modal'))closeModal();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
     document.addEventListener('change',e=>{if(e.target?.id==='history-filter')renderHistoryReport();});
+    document.addEventListener('change',e=>{const id=e.target?.id||'';if(id.startsWith('team-')&&id.endsWith('-date')){
+      const chosen=e.target.value;if(!chosen)return;state.teamDate=chosen;state.teamData=null;state.teamFetchedAt=0;state.teamError=null;
+      renderBothTeamDashboards();void loadTeamDashboard(true);
+    }});
+    document.addEventListener('input',e=>{const id=e.target?.id||'';if(id==='team-overview-search')renderTeamDashboard('overview');if(id==='team-attendance-search')renderTeamDashboard('attendance');});
     document.addEventListener('change',e=>{const id=e.target?.id||'';if(id.startsWith('h7-')&&['-date','-status'].some(s=>id.endsWith(s)))renderHistoryDashboard(id.includes('h7-overview-')?'overview':'attendance');});
     document.addEventListener('input',e=>{const id=e.target?.id||'';if(id==='h7-overview-search')renderHistoryDashboard('overview');if(id==='h7-attendance-search')renderHistoryDashboard('attendance');});
     document.addEventListener('change',e=>{if(e.target?.id==='live-date')renderTables();});
@@ -968,6 +1061,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   async function init(){
     buildPages();
     attachHistoryDashboardPanels();
+    attachTeamPanels();
     const modal=document.createElement('div');modal.id='live-modal';modal.className='modal-backdrop hidden';modal.setAttribute('aria-hidden','true');modal.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="live-modal-title"><div class="modal-top"><h2 id="live-modal-title">Employee action</h2><button class="modal-close" id="live-modal-close" type="button" aria-label="Close dialog">×</button></div><div id="live-modal-content"></div></div>';document.body.appendChild(modal);
     bindEvents();showLogin();
     const cfg=window.HRIS_CONFIG||{};
