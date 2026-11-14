@@ -319,6 +319,9 @@
   const state = {client:null,user:null,profile:null,people:[],staff:[],scans:[],daily:[],web:[],leaves:[],corrections:[],assets:[],page:'overview',date:DAY(),busy:false,loaded:false};
   let bulkRows = [];
   let bulkReviewed = false;
+  let historyCandidateRows = [];
+  let historyReady = false;
+  let historyReportData = null;
   const team = () => ['admin','hr','attendance_viewer'].includes(state.profile?.role);
   const admin = () => state.profile?.role==='admin';
   const manager = () => ['admin','hr'].includes(state.profile?.role);
@@ -357,7 +360,7 @@
         <div class="panel padded-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Recorded web IN/OUT</h2><p>Manual punches from HRIS are recorded separately from raw fingerprint scans.</p></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>DATE</th><th>IN</th><th>OUT</th><th>SOURCE</th></tr></thead><tbody id="live-web-body"></tbody></table></div></div>`,
       scans:`<div class="page-heading"><div><span class="eyebrow">ZKTECO DEVICE</span><h1>Fingerprint scans</h1><p>Verified raw device events from the office PC connector — no fingerprint images.</p></div><button class="btn btn-outline" data-refresh="">↻ Refresh</button></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Recent verified scans</h2><p id="live-scans-count">Loaded scanner events</p></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>SCANNER ID</th><th>DATE · GST</th><th>TIME · GST</th></tr></thead><tbody id="live-scan-body"></tbody></table></div></div>`,
       'scanner-staff':`<div class="page-heading"><div><span class="eyebrow">SCANNER IDENTITIES</span><h1>Scanner staff</h1><p>Device IDs are not login accounts. Verify real identity before linking an account to a fingerprint ID.</p></div></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Staff on fingerprint device</h2><p id="live-staff-sub">Staff directory</p></div><input class="search-input" id="live-staff-search" type="search" placeholder="Search scanner staff"></div><div class="table-scroll"><table><thead><tr><th>SCANNER ID</th><th>NAME ON DEVICE</th><th>STATUS</th><th>LINKED ACCOUNT</th><th>ADMIN ACTION</th></tr></thead><tbody id="live-staff-body"></tbody></table></div></div>`,
-      employees:`<div class="page-heading"><div><span class="eyebrow">YOUR WORKFORCE</span><h1>Employees</h1><p>Real Supabase login accounts. Send secure email invitations and assign roles without sharing passwords.</p></div><button class="btn btn-primary" id="live-invite-open" type="button">+ Invite employee</button></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Employee accounts</h2><p id="live-people-sub">Accounts with HRIS login</p></div><input type="search" class="search-input" id="live-people-search" placeholder="Search employees"></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>EMAIL</th><th>DEPARTMENT</th><th>ROLE</th><th>STATUS</th><th>ACCESS</th></tr></thead><tbody id="live-people-body"></tbody></table></div></div><div class="panel padded-panel hidden" id="bulk-upload-panel"><div class="panel-title-row"><div><h2>Bulk employee upload</h2><p>Import the HR-confirmed employee list from Excel (save as CSV UTF-8) without making accidental fingerprint links.</p></div><div class="bulk-actions"><button class="btn btn-outline" id="bulk-template-download" type="button">↓ CSV template</button><button class="btn btn-outline" id="bulk-roster-view" type="button">Review imported roster</button><button class="btn btn-primary" id="bulk-upload-open" type="button">↑ Bulk upload CSV</button></div></div><p class="bulk-note">Separate columns: <strong>HR Employee ID</strong> and <strong>Fingerprint Scanner ID</strong>. First preview and validate, then confirm import. Invitations are a separate deliberate step. Only the Administrator can use this tool.</p></div><div class="info-panel"><span>ⓘ</span><div><strong>34 scanner IDs ≠ 34 logins</strong><p>Invite each employee with their own email. After checking their real identity, link the correct scanner user ID in Scanner staff. Web Clock IN/OUT is OFF by default; the Admin may turn it on in Manage access for off-site field staff. HR Manager can review requests; Attendance Viewer is read-only.</p></div></div>`,
+      employees:`<div class="page-heading"><div><span class="eyebrow">YOUR WORKFORCE</span><h1>Employees</h1><p>Real Supabase login accounts. Send secure email invitations and assign roles without sharing passwords.</p></div><button class="btn btn-primary" id="live-invite-open" type="button">+ Invite employee</button></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Employee accounts</h2><p id="live-people-sub">Accounts with HRIS login</p></div><input type="search" class="search-input" id="live-people-search" placeholder="Search employees"></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>EMAIL</th><th>DEPARTMENT</th><th>ROLE</th><th>STATUS</th><th>ACCESS</th></tr></thead><tbody id="live-people-body"></tbody></table></div></div><div class="panel padded-panel hidden" id="bulk-upload-panel"><div class="panel-title-row"><div><h2>Bulk employee upload</h2><p>Import the HR-confirmed employee list from Excel (save as CSV UTF-8) without making accidental fingerprint links.</p></div><div class="bulk-actions"><button class="btn btn-outline" id="bulk-template-download" type="button">↓ CSV template</button><button class="btn btn-outline" id="bulk-roster-view" type="button">Review imported roster</button><button class="btn btn-primary" id="bulk-upload-open" type="button">↑ Bulk upload CSV</button></div></div><p class="bulk-note">Separate columns: <strong>HR Employee ID</strong> and <strong>Fingerprint Scanner ID</strong>. First preview and validate, then confirm import. Invitations are a separate deliberate step. Only the Administrator can use this tool.</p></div><div class="panel padded-panel hidden" id="history-upload-panel" style="margin-top:18px"><div class="panel-title-row"><div><h2>Last 7 days · Fingerprint history</h2><p>Upload the Office PC's read-only scanner CSV to review IN/OUT candidates for 17 HR roster employees.</p></div><div class="bulk-actions"><button class="btn btn-outline" id="history-report-open" type="button">View 7-day scan report</button><button class="btn btn-primary" id="history-upload-open" type="button">↑ Upload scanner history CSV</button></div></div><p class="bulk-note"><strong>Not approved attendance:</strong> First/last scans are candidates only. 16 staff identities still need HR verification; no fingerprint login links, scanner baseline or payroll records are changed by import.</p></div><div class="info-panel"><span>ⓘ</span><div><strong>34 scanner IDs ≠ 34 logins</strong><p>Invite each employee with their own email. After checking their real identity, link the correct scanner user ID in Scanner staff. Web Clock IN/OUT is OFF by default; the Admin may turn it on in Manage access for off-site field staff. HR Manager can review requests; Attendance Viewer is read-only.</p></div></div>`,
       leaves:`<div class="page-heading"><div><span class="eyebrow">PEOPLE OPERATIONS</span><h1>Leave applications</h1><p>Send a real leave request and follow its HR review status.</p></div></div><div class="correction-layout"><div class="panel padded-panel"><span class="panel-kicker">EMPLOYEE REQUEST</span><h2>Request leave</h2><form class="stack-form" id="live-leave-form"><label for="ll-type">Leave type</label><select id="ll-type" required><option value="annual">Annual leave</option><option value="sick">Sick leave</option><option value="emergency">Emergency leave</option><option value="unpaid">Unpaid leave</option><option value="other">Other leave</option></select><div class="form-row"><div><label for="ll-from">Start date</label><input id="ll-from" type="date" required></div><div><label for="ll-to">End date</label><input id="ll-to" type="date" required></div></div><label for="ll-reason">Reason</label><textarea id="ll-reason" required minlength="5" maxlength="1000" rows="3" placeholder="Brief reason for leave"></textarea><button class="btn btn-primary full" type="submit">Submit leave request ↗</button></form></div><div class="panel padded-panel"><span class="panel-kicker">MY APPLICATIONS</span><h2>Request status</h2><p>Requests are reviewed by Admin or HR Manager. Leave balances are not calculated yet.</p><div class="info-card"><strong>Important</strong><p>Approval is a request decision, not automatic payroll or leave-balance posting.</p></div></div></div><div class="panel data-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Leave requests</h2><p>Requests visible under your account permissions</p></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>TYPE</th><th>DATES</th><th>STATUS</th><th>REASON</th><th>REVIEW</th></tr></thead><tbody id="live-leaves-body"></tbody></table></div></div>`,
       approvals:`<div class="page-heading"><div><span class="eyebrow">HR APPROVALS</span><h1>Review requests</h1><p>HR Manager and Administrator can approve/reject another employee's pending request.</p></div></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Leave approvals</h2></div></div><div id="live-approve-leaves"></div></div><div class="panel data-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Time correction approvals</h2><p>Decisions are tracked separately; they do not overwrite raw scanner events.</p></div></div><div id="live-approve-corrections"></div></div>`,
       corrections:`<div class="page-heading"><div><span class="eyebrow">ATTENDANCE ACCURACY</span><h1>Time corrections</h1><p>Report a missing or wrong fingerprint punch. Original scanner logs are never overwritten.</p></div></div><div class="correction-layout"><div class="panel padded-panel"><span class="panel-kicker">EMPLOYEE REQUEST</span><h2>Request an attendance correction</h2><form class="stack-form" id="live-correction-form"><label for="lc-date">Attendance date</label><input id="lc-date" type="date" required><div class="form-row"><div><label for="lc-in">Proposed IN · GST</label><input id="lc-in" type="time"></div><div><label for="lc-out">Proposed OUT · GST</label><input id="lc-out" type="time"></div></div><label for="lc-reason">Reason</label><textarea id="lc-reason" required minlength="5" maxlength="1000" rows="3" placeholder="Explain what scan was missing or wrong"></textarea><button class="btn btn-primary full" type="submit">Submit correction request ↗</button></form></div><div class="panel padded-panel"><span class="panel-kicker">MY CORRECTIONS</span><h2>Correction history</h2><p>Review decisions never modify the original fingerprint events. Payroll calculation needs a separate approved attendance workflow.</p></div></div><div class="panel data-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Time correction requests</h2></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>DATE</th><th>PROPOSED IN / OUT</th><th>STATUS</th><th>REASON</th><th>REVIEW</th></tr></thead><tbody id="live-corrections-body"></tbody></table></div></div>`,
@@ -505,6 +508,7 @@
   }
   function renderPeople(){
     $('bulk-upload-panel')?.classList.toggle('hidden',!admin());
+    $('history-upload-panel')?.classList.toggle('hidden',!admin());
     $('live-invite-open')?.classList.toggle('hidden',!admin());
     const q=($('live-people-search')?.value||'').toLowerCase().trim();
     const list=state.people.filter(p=>[p.full_name,p.email,p.department,p.role].join(' ').toLowerCase().includes(q));
@@ -580,6 +584,67 @@
       if(!obj.employee_code&&obj.employee_id)obj.employee_code=obj.employee_id;
       return {employee_code:obj.employee_code||'',email:obj.email||'',full_name:obj.full_name||'',scanner_user_id:obj.scanner_user_id||'',department:obj.department||'',job_title:obj.job_title||'',role:obj.role||'employee'};
     });
+  }
+  async function historyApi(action, params={}){
+    if(!admin())throw Error('Administrator access required');
+    const {data,error}=await state.client.functions.invoke('hris-historical-attendance',{body:{action,...params}});
+    if(error){let message=error.message||'History API unavailable';try{const extra=await error.context?.json();message=extra?.error||message;}catch{}throw Error(message);}
+    if(!data?.ok)throw Error(data?.error||'History action failed');
+    return data;
+  }
+  function parseHistoryCsv(raw){
+    const lines=raw.replace(/^\uFEFF/,'').trim().split(/\r?\n/).map(v=>v.trim()).filter(Boolean);
+    if(lines.length<2)throw Error('History CSV has no scan records for the selected date range.');
+    const expected=['employee_code','scanner_user_id','device_local_time','event_key','device_key'];
+    const columns=lines.shift().split(',').map(v=>v.toLowerCase().trim());
+    if(columns.length!==expected.length||columns.some((v,i)=>v!==expected[i]))throw Error('Wrong CSV format. Use the CSV from export-last7-history.js only.');
+    if(lines.length>1500)throw Error('Maximum 1500 scans per upload. Ask Admin to split a large file safely.');
+    return lines.map((line,i)=>{
+      const pieces=line.split(',');
+      if(pieces.length!==5||pieces.some(p=>p.includes('"')))throw Error('Malformed history CSV at row '+(i+2));
+      const obj={};expected.forEach((k,n)=>obj[k]=pieces[n].trim());return obj;
+    });
+  }
+  function openHistoryUpload(){
+    historyReady=false;historyCandidateRows=[];
+    openModal('Last 7 days · Scanner history import',`<div class="stack-form"><p>1. On the Office PC, stop live:loop temporarily and run <code>node export-last7-history.js</code> in the connector folder. Restart live:loop after the read-only export. 2. Choose the generated scanner history CSV here.</p><p class="bulk-note">Admin-only. Verify HR Employee Code ↔ Scanner ID mappings before importing. Preview does not write anything. Import keeps these scans in an <strong>unapproved historical review</strong> table, NOT payroll or live scanner_events.</p><input id="history-csv-file" type="file" accept=".csv,text/csv" aria-label="Choose 7-day scanner history CSV"><button type="button" class="btn btn-primary" id="history-preview-btn">Preview and validate scans →</button><div id="history-preview-results" aria-live="polite"></div></div>`);
+  }
+  async function previewHistory(){
+    const file=$('history-csv-file')?.files?.[0];if(!file)throw Error('Choose your exported scanner CSV first.');
+    if(file.size>230000)throw Error('History CSV too large. Max 1500 scans.');
+    const rows=parseHistoryCsv(await file.text());
+    const result=await historyApi('preview',{rows});
+    historyCandidateRows=rows;historyReady=result.errors.length===0;
+    $('history-preview-results').innerHTML=`<div class="bulk-import-footer"><strong>${result.week.start} – ${result.week.end} (UAE) · ${result.valid}/${result.received} scans valid · ${result.employees} employees</strong></div>${result.errors.length?'<p class="bulk-note" style="color:#b72331">'+result.errors.map(x=>html(x)).join('<br>')+'</p>':'<p class="bulk-note">HR confirmation needed before import: these are unapproved first/last scan candidates. No automatic login identity linking.</p><button type="button" class="btn btn-primary" id="history-import-btn">Confirm and stage scans for HR review →</button>'}`;
+  }
+  async function importHistory(){
+    if(!historyReady||!historyCandidateRows.length)throw Error('Please preview the CSV successfully first.');
+    if(!confirm(`Stage ${historyCandidateRows.length} historical scanner records for ADMIN REVIEW? This does NOT approve IN/OUT, change payroll, link logins or change the live sync checkpoint.`))return;
+    const data=await historyApi('import',{rows:historyCandidateRows,confirmed:true});
+    historyCandidateRows=[];historyReady=false;
+    closeModal();notify(`${data.accepted} historical scans accepted/confirmed for HR review (duplicates safely ignored).`);
+  }
+  function tableHistoryRows(rows){
+    return rows.map(r=>`<tr><td><strong>${html(r.name)}</strong><small class="bulk-status-note">${html(r.employee_code)} · ID ${html(r.scanner_user_id)}</small></td><td>${html(r.date)}</td><td>${html(r.first||'—')}</td><td>${html(r.last||'—')}</td><td>${Number(r.count)||0}</td><td>${html(r.status)}${r.count>0&&!r.identity_verified?'<small class="bulk-status-note" style="color:#976600">Identity needs HR verification</small>':''}</td></tr>`).join('');
+  }
+  function renderHistoryReport(){
+    if(!historyReportData)return;
+    const code=$('history-filter')?.value||'';
+    const filtered=code?historyReportData.rows.filter(x=>x.employee_code===code):historyReportData.rows;
+    $('history-report-body').innerHTML=tableHistoryRows(filtered);
+  }
+  async function showHistoryReport(){
+    const data=await historyApi('report');historyReportData=data;
+    const choices=[...new Map(data.rows.map(r=>[r.employee_code,r.name])).entries()].map(([code,name])=>`<option value="${html(code)}">${html(name)} (${html(code)})</option>`).join('');
+    openModal('Fingerprint history · Last 7 UAE days',`<p class="bulk-note">${html(data.week.start)} – ${html(data.week.end)} · ${data.employees} roster employees · ${data.total_scans} staged fingerprint scans. Empty dates mean <strong>no scan record</strong>, not necessarily absence. First/last scans are NOT approved IN/OUT or payroll hours.</p><div class="bulk-import-footer"><label>Employee: <select id="history-filter" aria-label="Filter by employee"><option value="">All employees</option>${choices}</select></label><button type="button" class="btn btn-outline" id="history-download">↓ Download 7-day report CSV</button></div><div class="bulk-table-wrap"><table><thead><tr><th>EMPLOYEE</th><th>UAE DATE</th><th>FIRST SCAN · IN?</th><th>LAST SCAN · OUT?</th><th>SCANS</th><th>REVIEW STATUS</th></tr></thead><tbody id="history-report-body"></tbody></table></div>`);
+    renderHistoryReport();
+  }
+  function downloadHistoryReport(){
+    if(!historyReportData)return;
+    const rows=historyReportData.rows;
+    const data=[['EMPLOYEE_CODE','EMPLOYEE_NAME','SCANNER_ID','WORK_DATE_UAE','FIRST_SCAN_IN_CANDIDATE','LAST_SCAN_OUT_CANDIDATE','SCANS','IDENTITY_VERIFIED','REVIEW_STATUS'],...rows.map(r=>[r.employee_code,r.name,r.scanner_user_id,r.date,r.first||'',r.last||'',r.count,r.identity_verified?'Yes':'Needs HR verification',r.status])];
+    const blob=new Blob(['\uFEFF'+data.map(row=>row.map(csvValue).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=u;a.download=`Helen_Sons_7_Days_Attendance_Review_${historyReportData.week.start}_to_${historyReportData.week.end}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);
   }
   function bulkUploadDialog(){
     if(!admin())return;
@@ -693,6 +758,11 @@
     if(button.hasAttribute('data-back-login')){showLogin();return;}
     if(button.dataset.toggle){const input=$(button.dataset.toggle);if(input){input.type=input.type==='password'?'text':'password';button.textContent=input.type==='password'?'Show':'Hide';}return;}
     if(button.id==='top-leave-btn'){switchPage('approvals');return;}
+    if(button.id==='history-upload-open'){openHistoryUpload();return;}
+    if(button.id==='history-report-open'){await actionBusy(()=>showHistoryReport());return;}
+    if(button.id==='history-preview-btn'){await actionBusy(()=>previewHistory());return;}
+    if(button.id==='history-import-btn'){await actionBusy(()=>importHistory());return;}
+    if(button.id==='history-download'){downloadHistoryReport();return;}
     if(button.id==='bulk-template-download'){if(admin())downloadBulkTemplate();return;}
     if(button.id==='bulk-upload-open'){bulkUploadDialog();return;}
     if(button.id==='bulk-roster-view'){await actionBusy(()=>rosterDialog());return;}
@@ -716,6 +786,7 @@
     document.addEventListener('click',handleClick);
     $('live-modal').addEventListener('click',e=>{if(e.target===$('live-modal'))closeModal();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+    document.addEventListener('change',e=>{if(e.target?.id==='history-filter')renderHistoryReport();});
     document.addEventListener('change',e=>{if(e.target?.id==='live-date')renderTables();});
     document.addEventListener('input',e=>{if(e.target?.id==='live-staff-search')renderStaff();if(e.target?.id==='live-people-search')renderPeople();});
     const theme=(()=>{try{return localStorage.getItem('helen-sons-hris-studio-theme')==='dark'?'dark':'light';}catch{return 'light';}})();setTheme(theme);
