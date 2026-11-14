@@ -30,6 +30,15 @@
 #live-daily-body small,#live-people-body small,#live-assets-body small{display:block;font-size:11px;color:#5b6280;margin-top:3px}
 #live-leaves-body td,#live-corrections-body td{max-width:280px;overflow-wrap:anywhere}
 #live-date{min-width:148px;max-width:190px}
+/* Web punching is only for field employees specifically granted this account permission. */
+#field-web-clock-card[hidden]{display:none!important}
+.overview-grid.overview-tools.field-clock-hidden{grid-template-columns:minmax(0,1fr)!important}
+#live-modal .field-clock-access{display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid #d8dced;border-radius:14px;background:rgba(241,246,255,.65);margin:12px 0}
+#live-modal .field-clock-access input[type=checkbox]{width:20px;height:20px;flex:none;margin-top:2px}
+#live-modal .field-clock-access strong,#live-modal .field-clock-access small{display:block}
+#live-modal .field-clock-access small{margin-top:4px;line-height:1.5;color:#505b76}
+#live-modal .field-clock-access label{cursor:pointer}
+
 @media(max-width:700px){.live-queue-row{align-items:start;flex-direction:column}#live-modal-content{padding:6px 14px 20px}#live-modal .modal-top{padding:16px}}
 </style></head>
 <body>
@@ -135,7 +144,7 @@
 <button data-page="reports" type="button"><span class="studio-utility-icon">▥</span><span><strong>Reports and exports</strong><small>Review and download your data</small></span><span class="studio-utility-arr">↗</span></button>
 </div></div></div>
 <div class="overview-grid overview-tools">
-<div class="panel attendance-hero"><div class="panel-eyebrow">YOUR ATTENDANCE TODAY</div><div class="attendance-hero-top"><div><h2>Clock IN / Clock OUT</h2><p>Recorded in Gulf Standard Time (GST · UTC+4)</p></div><span class="status-pill status-not-in" id="my-status-pill">NOT CLOCKED IN</span></div>
+<div class="panel attendance-hero" id="field-web-clock-card" hidden><div class="panel-eyebrow">FIELD STAFF · WEB ATTENDANCE</div><div class="attendance-hero-top"><div><h2>Field staff · Clock IN / Clock OUT</h2><p>Admin-granted permission · Gulf Standard Time (GST · UTC+4)</p></div><span class="status-pill status-not-in" id="my-status-pill">NOT CLOCKED IN</span></div>
 <div class="clock-line"><strong id="live-clock">--:--:--</strong><span id="clock-date">--</span></div>
 <div class="punch-grid"><div><span>IN TIME</span><strong id="my-in-time">--:--</strong></div><div><span>OUT TIME</span><strong id="my-out-time">--:--</strong></div><div><span>HOURS WORKED</span><strong id="my-hours">—</strong></div></div>
 <div class="clock-actions"><button class="btn btn-success" id="clock-in-btn" type="button">↗ CLOCK IN</button><button class="btn btn-dark" id="clock-out-btn" type="button">↘ CLOCK OUT</button></div>
@@ -284,7 +293,7 @@
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js"></script>
 <script>
-/* Helen & Sons HRIS | Classic Studio LIVE frontend.
+/* Helen & Sons HRIS | Classic Studio LIVE frontend · Field Clock Permission v1.
    Visual shell is retained from original localhost interface.
    All HR writes go to authenticated Supabase RLS or hris-admin Edge Function.
    Do not place secret/service-role credentials in this file. */
@@ -297,6 +306,7 @@
   const team = () => ['admin','hr','attendance_viewer'].includes(state.profile?.role);
   const admin = () => state.profile?.role==='admin';
   const manager = () => ['admin','hr'].includes(state.profile?.role);
+  const canWebClock = () => state.profile?.active === true && state.profile?.web_clock_enabled === true && ['employee','hr'].includes(state.profile?.role);
   const roleText = r => ({admin:'Administrator',hr:'HR Manager',attendance_viewer:'Attendance Viewer',employee:'Employee'})[r]||'Employee';
   const gstDate = (v) => String(v||'').slice(0,10);
   const gstTime = (v) => v ? String(v).slice(11,16) : '—';
@@ -331,7 +341,7 @@
         <div class="panel padded-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Recorded web IN/OUT</h2><p>Manual punches from HRIS are recorded separately from raw fingerprint scans.</p></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>DATE</th><th>IN</th><th>OUT</th><th>SOURCE</th></tr></thead><tbody id="live-web-body"></tbody></table></div></div>`,
       scans:`<div class="page-heading"><div><span class="eyebrow">ZKTECO DEVICE</span><h1>Fingerprint scans</h1><p>Verified raw device events from the office PC connector — no fingerprint images.</p></div><button class="btn btn-outline" data-refresh="">↻ Refresh</button></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Recent verified scans</h2><p id="live-scans-count">Loaded scanner events</p></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>SCANNER ID</th><th>DATE · GST</th><th>TIME · GST</th></tr></thead><tbody id="live-scan-body"></tbody></table></div></div>`,
       'scanner-staff':`<div class="page-heading"><div><span class="eyebrow">SCANNER IDENTITIES</span><h1>Scanner staff</h1><p>Device IDs are not login accounts. Verify real identity before linking an account to a fingerprint ID.</p></div></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Staff on fingerprint device</h2><p id="live-staff-sub">Staff directory</p></div><input class="search-input" id="live-staff-search" type="search" placeholder="Search scanner staff"></div><div class="table-scroll"><table><thead><tr><th>SCANNER ID</th><th>NAME ON DEVICE</th><th>STATUS</th><th>LINKED ACCOUNT</th><th>ADMIN ACTION</th></tr></thead><tbody id="live-staff-body"></tbody></table></div></div>`,
-      employees:`<div class="page-heading"><div><span class="eyebrow">YOUR WORKFORCE</span><h1>Employees</h1><p>Real Supabase login accounts. Send secure email invitations and assign roles without sharing passwords.</p></div><button class="btn btn-primary" id="live-invite-open" type="button">+ Invite employee</button></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Employee accounts</h2><p id="live-people-sub">Accounts with HRIS login</p></div><input type="search" class="search-input" id="live-people-search" placeholder="Search employees"></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>EMAIL</th><th>DEPARTMENT</th><th>ROLE</th><th>STATUS</th><th>ACCESS</th></tr></thead><tbody id="live-people-body"></tbody></table></div></div><div class="info-panel"><span>ⓘ</span><div><strong>34 scanner IDs ≠ 34 logins</strong><p>Invite each employee with their own email. After checking their real identity, link the correct scanner user ID in Scanner staff. HR Manager can review requests; Attendance Viewer is read-only.</p></div></div>`,
+      employees:`<div class="page-heading"><div><span class="eyebrow">YOUR WORKFORCE</span><h1>Employees</h1><p>Real Supabase login accounts. Send secure email invitations and assign roles without sharing passwords.</p></div><button class="btn btn-primary" id="live-invite-open" type="button">+ Invite employee</button></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Employee accounts</h2><p id="live-people-sub">Accounts with HRIS login</p></div><input type="search" class="search-input" id="live-people-search" placeholder="Search employees"></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>EMAIL</th><th>DEPARTMENT</th><th>ROLE</th><th>STATUS</th><th>ACCESS</th></tr></thead><tbody id="live-people-body"></tbody></table></div></div><div class="info-panel"><span>ⓘ</span><div><strong>34 scanner IDs ≠ 34 logins</strong><p>Invite each employee with their own email. After checking their real identity, link the correct scanner user ID in Scanner staff. Web Clock IN/OUT is OFF by default; the Admin may turn it on in Manage access for off-site field staff. HR Manager can review requests; Attendance Viewer is read-only.</p></div></div>`,
       leaves:`<div class="page-heading"><div><span class="eyebrow">PEOPLE OPERATIONS</span><h1>Leave applications</h1><p>Send a real leave request and follow its HR review status.</p></div></div><div class="correction-layout"><div class="panel padded-panel"><span class="panel-kicker">EMPLOYEE REQUEST</span><h2>Request leave</h2><form class="stack-form" id="live-leave-form"><label for="ll-type">Leave type</label><select id="ll-type" required><option value="annual">Annual leave</option><option value="sick">Sick leave</option><option value="emergency">Emergency leave</option><option value="unpaid">Unpaid leave</option><option value="other">Other leave</option></select><div class="form-row"><div><label for="ll-from">Start date</label><input id="ll-from" type="date" required></div><div><label for="ll-to">End date</label><input id="ll-to" type="date" required></div></div><label for="ll-reason">Reason</label><textarea id="ll-reason" required minlength="5" maxlength="1000" rows="3" placeholder="Brief reason for leave"></textarea><button class="btn btn-primary full" type="submit">Submit leave request ↗</button></form></div><div class="panel padded-panel"><span class="panel-kicker">MY APPLICATIONS</span><h2>Request status</h2><p>Requests are reviewed by Admin or HR Manager. Leave balances are not calculated yet.</p><div class="info-card"><strong>Important</strong><p>Approval is a request decision, not automatic payroll or leave-balance posting.</p></div></div></div><div class="panel data-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Leave requests</h2><p>Requests visible under your account permissions</p></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>TYPE</th><th>DATES</th><th>STATUS</th><th>REASON</th><th>REVIEW</th></tr></thead><tbody id="live-leaves-body"></tbody></table></div></div>`,
       approvals:`<div class="page-heading"><div><span class="eyebrow">HR APPROVALS</span><h1>Review requests</h1><p>HR Manager and Administrator can approve/reject another employee's pending request.</p></div></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Leave approvals</h2></div></div><div id="live-approve-leaves"></div></div><div class="panel data-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Time correction approvals</h2><p>Decisions are tracked separately; they do not overwrite raw scanner events.</p></div></div><div id="live-approve-corrections"></div></div>`,
       corrections:`<div class="page-heading"><div><span class="eyebrow">ATTENDANCE ACCURACY</span><h1>Time corrections</h1><p>Report a missing or wrong fingerprint punch. Original scanner logs are never overwritten.</p></div></div><div class="correction-layout"><div class="panel padded-panel"><span class="panel-kicker">EMPLOYEE REQUEST</span><h2>Request an attendance correction</h2><form class="stack-form" id="live-correction-form"><label for="lc-date">Attendance date</label><input id="lc-date" type="date" required><div class="form-row"><div><label for="lc-in">Proposed IN · GST</label><input id="lc-in" type="time"></div><div><label for="lc-out">Proposed OUT · GST</label><input id="lc-out" type="time"></div></div><label for="lc-reason">Reason</label><textarea id="lc-reason" required minlength="5" maxlength="1000" rows="3" placeholder="Explain what scan was missing or wrong"></textarea><button class="btn btn-primary full" type="submit">Submit correction request ↗</button></form></div><div class="panel padded-panel"><span class="panel-kicker">MY CORRECTIONS</span><h2>Correction history</h2><p>Review decisions never modify the original fingerprint events. Payroll calculation needs a separate approved attendance workflow.</p></div></div><div class="panel data-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Time correction requests</h2></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>DATE</th><th>PROPOSED IN / OUT</th><th>STATUS</th><th>REASON</th><th>REVIEW</th></tr></thead><tbody id="live-corrections-body"></tbody></table></div></div>`,
@@ -389,7 +399,7 @@
     if(!state.client||!state.profile)return;
     const c=state.client;
     const requests=[
-      safely(c.from('profiles').select('id,email,full_name,department,job_title,role,active').order('full_name'),'profiles'),
+      safely(c.from('profiles').select('id,email,full_name,department,job_title,role,active,web_clock_enabled').order('full_name'),'profiles'),
       safely(c.from('staff_directory').select('device_key,scanner_user_id,full_name,employee_code,review_status,auth_profile_id').order('full_name'),'scanner staff'),
       safely(c.from('scanner_events').select('event_key,device_key,scanner_user_id,device_local_time').order('device_local_time',{ascending:false}).limit(500),'scanner events'),
       safely(c.from('daily_attendance_preview').select('device_key,scanner_user_id,employee_name,work_date,first_scan_local,last_scan_local,punch_count,preview_status,elapsed_minutes').order('work_date',{ascending:false}).limit(750),'daily attendance preview'),
@@ -400,6 +410,12 @@
     if(admin())requests.push(safely(c.from('company_assets').select('id,asset_tag,category,asset_name,identifier,brand,model,status,assigned_to,notes').order('created_at',{ascending:false}).limit(250),'company assets'));
     const data=await Promise.all(requests);
     [state.people,state.staff,state.scans,state.daily,state.web,state.leaves,state.corrections]=data;
+    // Keep permission changes current after the 60-second refresh without requiring a new sign-in.
+    const updatedSelf=state.people.find(p=>p.id===state.user.id);
+    if(updatedSelf){
+      if(!updatedSelf.active){await state.client.auth.signOut();notify('Account access has been suspended.',true);return;}
+      state.profile=updatedSelf;
+    }
     state.assets=admin()?data[7]:[];
     if(!state.people.some(p=>p.id===state.profile.id))state.people.push(state.profile);
     state.loaded=true;
@@ -409,7 +425,7 @@
     if(!state.client)return;
     const {data:{user},error}=await state.client.auth.getUser();
     if(error||!user){state.user=null;state.profile=null;showLogin();return;}
-    const {data:profile,error:pe}=await state.client.from('profiles').select('id,email,full_name,department,job_title,role,active').eq('id',user.id).single();
+    const {data:profile,error:pe}=await state.client.from('profiles').select('id,email,full_name,department,job_title,role,active,web_clock_enabled').eq('id',user.id).single();
     if(pe||!profile){notify('No HRIS profile found. Contact the Administrator.',true);await state.client.auth.signOut();showLogin();return;}
     if(!profile.active){notify('Account inactive. Contact HR.',true);await state.client.auth.signOut();showLogin();return;}
     state.user=user;state.profile=profile;
@@ -435,24 +451,28 @@
     $('workflow-rejected').textContent=String(state.leaves.filter(x=>x.status==='rejected').length);
     $('alerts-glance-count').textContent='Not enabled';
     $('alerts-glance-list').innerHTML='<p class="section-helper">Company shift times and grace periods are not configured. Late alerts cannot be calculated reliably.</p>';
-    $('my-status-pill').textContent='SCANNER PREVIEW';$('my-status-pill').className='status-pill status-not-in';
-    const mine=state.daily.find(r=>r.work_date===DAY() && state.staff.some(x=>x.auth_profile_id===p.id&&x.scanner_user_id===r.scanner_user_id));
+    const fieldClockCard=$('field-web-clock-card');
+    const fieldAllowed=canWebClock();
+    if(fieldClockCard) fieldClockCard.hidden=!fieldAllowed;
+    document.querySelector('.overview-grid.overview-tools')?.classList.toggle('field-clock-hidden',!fieldAllowed);
+    $('my-status-pill').textContent='NOT CLOCKED IN';$('my-status-pill').className='status-pill status-not-in';
     const myWeb=state.web.find(w=>w.employee_id===p.id&&w.work_date===DAY());
-    $('my-in-time').textContent=mine?gstTime(mine.first_scan_local):myWeb?isoGSTTime(myWeb.clock_in_at):'—';
-    $('my-out-time').textContent=mine?gstTime(mine.last_scan_local):myWeb?isoGSTTime(myWeb.clock_out_at):'—';
-    $('my-hours').textContent=mine?.elapsed_minutes!=null?`${Math.floor(mine.elapsed_minutes/60)}h ${mine.elapsed_minutes%60}m*`:'—';
-    $('my-status-pill').textContent=mine?'SCANNER · HR REVIEW':myWeb?'WEB PUNCH':'NO SCAN';
-    $('punch-help').textContent='* First/last scan is provisional, not approved work hours. Web clock IN/OUT is separate from scanner data.';
-    $('clock-in-btn').disabled=!!myWeb?.clock_in_at;
-    $('clock-out-btn').disabled=!myWeb?.clock_in_at || !!myWeb?.clock_out_at;
-    $('clock-in-btn').title='Web attendance punch — does not control fingerprint scanner';
-    $('clock-out-btn').title='Web attendance punch — does not control fingerprint scanner';
+    $('my-in-time').textContent=myWeb?isoGSTTime(myWeb.clock_in_at):'—';
+    $('my-out-time').textContent=myWeb?isoGSTTime(myWeb.clock_out_at):'—';
+    const webElapsed=myWeb?.clock_in_at && myWeb?.clock_out_at ? Math.max(0,Math.floor((new Date(myWeb.clock_out_at)-new Date(myWeb.clock_in_at))/60000)) : null;
+    $('my-hours').textContent=webElapsed!==null?`${Math.floor(webElapsed/60)}h ${webElapsed%60}m*`:'—';
+    $('my-status-pill').textContent=myWeb?.clock_out_at?'CLOCKED OUT':myWeb?.clock_in_at?'CLOCKED IN':'NOT CLOCKED IN';
+    $('punch-help').textContent='* Field staff only. Times are recorded as WEB attendance, separate from the fingerprint scanner. HR verification is still required.';
+    $('clock-in-btn').disabled=!fieldAllowed || !!myWeb?.clock_in_at;
+    $('clock-out-btn').disabled=!fieldAllowed || !myWeb?.clock_in_at || !!myWeb?.clock_out_at;
+    $('clock-in-btn').title='Field staff web attendance only — fingerprint scanner is unchanged';
+    $('clock-out-btn').title='Field staff web attendance only — fingerprint scanner is unchanged';
     const rows=state.daily.filter(r=>r.work_date===DAY()).slice(0,7);
     $('overview-attendance-body').innerHTML=rows.length?rows.map(r=>`<tr><td><strong>${html(r.employee_name)}</strong><small class="td-note">Scanner ID ${html(r.scanner_user_id)}</small></td><td>${html(gstTime(r.first_scan_local))}</td><td>${html(gstTime(r.last_scan_local))}</td><td>${statusChip(previewLabel(r.preview_status))}</td></tr>`).join(''):'<tr><td colspan="4" class="empty-row">No fingerprint scans recorded today.</td></tr>';
     const lastTitle=$('page-overview').querySelector('.recent-attendance .panel-title-row h2');if(lastTitle)lastTitle.textContent="Today's fingerprint preview";
     const todaySub=$('page-overview').querySelector('.recent-attendance .panel-title-row p');if(todaySub)todaySub.textContent='First and last device scans · requires HR review';
-    const heading=$('page-overview').querySelector('.attendance-hero-top h2');if(heading)heading.textContent='My fingerprint IN / OUT preview';
-    const subtitle=$('page-overview').querySelector('.attendance-hero-top p');if(subtitle)subtitle.textContent='Raw scans only · Gulf Standard Time (GST)';
+    const heading=$('page-overview').querySelector('.attendance-hero-top h2');if(heading)heading.textContent='Field staff · Web Clock IN / OUT';
+    const subtitle=$('page-overview').querySelector('.attendance-hero-top p');if(subtitle)subtitle.textContent='Your manually recorded attendance · Gulf Standard Time (GST)';
   }
   function renderTables(){
     const date=$('live-date')?.value||DAY();
@@ -480,7 +500,7 @@
     $('live-people-sub').textContent=`${state.people.length} HRIS login profile(s). Scanner user IDs are listed separately.`;
     $('live-people-body').innerHTML=list.length?list.map(p=>{
       const act=admin() && p.id!==state.user.id && p.role!=='admin'?`<button type="button" class="table-action" data-manage-account="${html(p.id)}">Manage access</button>`:'—';
-      return `<tr><td><strong>${html(p.full_name)}</strong></td><td>${html(p.email)}</td><td>${html(p.department||'—')}</td><td>${html(roleText(p.role))}</td><td>${statusChip(p.active?'Active':'Inactive')}</td><td>${act}</td></tr>`;
+      return `<tr><td><strong>${html(p.full_name)}</strong></td><td>${html(p.email)}</td><td>${html(p.department||'—')}</td><td>${html(roleText(p.role))}</td><td>${statusChip(p.active?'Active':'Inactive')}${p.web_clock_enabled?'<small>Field Web Clock enabled</small>':''}</td><td>${act}</td></tr>`;
     }).join(''):'<tr><td colspan="6" class="empty-row">No employee accounts match.</td></tr>';
   }
   function reviewButton(type,id){return manager()?`<button class="table-action" data-review="${type}" data-review-id="${html(id)}">Review</button>`:'—';}
@@ -511,7 +531,7 @@
   async function actionBusy(fn){if(state.busy)return;state.busy=true;try{await fn();await loadData();}catch(e){notify(e?.message||'Unable to save changes.',true);}finally{state.busy=false;}}
   const accountChoices=()=>state.people.map(p=>`<option value="${html(p.id)}">${html(p.full_name)} (${html(p.email)})</option>`).join('');
   function inviteDialog(){openModal('Invite an employee',`<form id="lm-invite" class="stack-form"><p>Employee receives an email link and chooses their own password. One employee per unique email.</p><label for="mi-name">Full name *</label><input id="mi-name" required maxlength="120"><label for="mi-email">Email *</label><input id="mi-email" type="email" autocomplete="off" required><div class="form-row"><div><label for="mi-dept">Department</label><input id="mi-dept" maxlength="100"></div><div><label for="mi-title">Job title</label><input id="mi-title" maxlength="100"></div></div><label for="mi-role">Access role</label><select id="mi-role"><option value="employee">Employee · own data</option><option value="attendance_viewer">Attendance Viewer · read-only</option><option value="hr">HR Manager · review requests</option></select><button class="btn btn-primary" type="submit">Send secure email invitation →</button></form>`);}
-  function accessDialog(id){const p=state.people.find(x=>x.id===id);if(!p||p.role==='admin'||p.id===state.user.id)return;openModal('Manage employee access',`<form id="lm-access" class="stack-form"><input type="hidden" id="ma-id" value="${html(p.id)}"><p>${html(p.full_name)} · ${html(p.email)}</p><label for="ma-role">Role</label><select id="ma-role"><option value="employee" ${p.role==='employee'?'selected':''}>Employee</option><option value="attendance_viewer" ${p.role==='attendance_viewer'?'selected':''}>Attendance Viewer</option><option value="hr" ${p.role==='hr'?'selected':''}>HR Manager</option></select><label for="ma-status">Account status</label><select id="ma-status"><option value="true" ${p.active?'selected':''}>Active</option><option value="false" ${!p.active?'selected':''}>Inactive / suspend access</option></select><button type="submit" class="btn btn-primary">Save access →</button></form>`);}
+  function accessDialog(id){const p=state.people.find(x=>x.id===id);if(!p||p.role==='admin'||p.id===state.user.id)return;openModal('Manage employee access',`<form id="lm-access" class="stack-form"><input type="hidden" id="ma-id" value="${html(p.id)}"><p>${html(p.full_name)} · ${html(p.email)}</p><label for="ma-role">Role</label><select id="ma-role"><option value="employee" ${p.role==='employee'?'selected':''}>Employee</option><option value="attendance_viewer" ${p.role==='attendance_viewer'?'selected':''}>Attendance Viewer</option><option value="hr" ${p.role==='hr'?'selected':''}>HR Manager</option></select><label for="ma-status">Account status</label><select id="ma-status"><option value="true" ${p.active?'selected':''}>Active</option><option value="false" ${!p.active?'selected':''}>Inactive / suspend access</option></select><div class="field-clock-access"><input id="ma-web-clock" type="checkbox" ${p.web_clock_enabled?'checked':''}><label for="ma-web-clock"><strong>Enable Web Clock IN / OUT · Field staff</strong><small>OFF by default. Enable only for employees working outside the fingerprint-scanner office. Fingerprint syncing does not require this permission. Read-only Attendance Viewers cannot use web punching.</small></label></div><button type="submit" class="btn btn-primary">Save access →</button></form>`);}
   function staffDialog(id,device,mode){const s=state.staff.find(x=>x.scanner_user_id===id&&x.device_key===device);if(!s)return;
     if(mode==='verify')openModal('Verify fingerprint identity',`<form id="lm-verify" class="stack-form"><p>Confirm this person in person and check their device identity before marking verified. This does not create a login.</p><p><strong>ID ${html(id)} · ${html(s.full_name)}</strong></p><input type="hidden" id="mv-id" value="${html(id)}"><input type="hidden" id="mv-device" value="${html(device)}"><label for="mv-name">Type scanner name exactly</label><input id="mv-name" required autocomplete="off"><button class="btn btn-primary">Verify device identity →</button></form>`);
     else openModal('Link verified scanner ID',`<form id="lm-link" class="stack-form"><p>Only link after independent identity verification. A wrong link can expose someone else's attendance.</p><p><strong>ID ${html(id)} · ${html(s.full_name)}</strong></p><input type="hidden" id="ml-id" value="${html(id)}"><input type="hidden" id="ml-device" value="${html(device)}"><label for="ml-user">Matching employee login account</label><select id="ml-user" required><option value="">Choose an account</option>${accountChoices()}</select><label for="ml-name">Type scanner name exactly</label><input id="ml-name" required autocomplete="off"><button class="btn btn-primary">Link verified staff →</button></form>`);
@@ -531,7 +551,7 @@
   async function saveAsset(){if(!admin())throw Error('Admin only');const v={asset_tag:field('am-tag'),asset_name:field('am-name'),category:field('am-cat'),status:field('am-status'),identifier:field('am-identifier'),brand:field('am-brand'),model:field('am-model'),assigned_to:field('am-owner')||null,notes:field('am-notes')};
     if(!v.asset_tag||!v.asset_name||!v.identifier)throw Error('Asset tag, name and identifier are required');if(v.status==='assigned'&&!v.assigned_to)throw Error('Choose assigned employee');if(v.status!=='assigned')v.assigned_to=null;
     const id=field('am-id');const result=id?await state.client.from('company_assets').update(v).eq('id',id):await state.client.from('company_assets').insert(v);if(result.error)throw result.error;closeModal();notify('Company asset saved.');}
-  async function webPunch(action){if(!state.client)throw Error('Sign in first');if(!confirm('This will record a WEB '+action.toUpperCase()+' punch, separate from fingerprint scans. Continue?'))return;
+  async function webPunch(action){if(!state.client)throw Error('Sign in first');if(!canWebClock())throw Error('Your account is not approved for field web attendance. Contact your Administrator.');if(!confirm('This will record a WEB '+action.toUpperCase()+' punch, separate from fingerprint scans. Continue?'))return;
     const {error}=await state.client.rpc('punch_attendance',{p_action:action});if(error)throw error;notify('Web '+action.toUpperCase()+' punch recorded. Fingerprint logs are unchanged.');}
   function csvValue(v){let s=String(v??'');if(/^[\s]*[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
   function exportCsv(type){const kinds={daily:[['DATE','SCANNER ID','NAME','FIRST SCAN','LAST SCAN','PUNCHES','STATUS'],state.daily.map(x=>[x.work_date,x.scanner_user_id,x.employee_name,x.first_scan_local,x.last_scan_local,x.punch_count,x.preview_status])],scans:[['DATE','SCANNER ID','EMPLOYEE','LOCAL SCAN TIME'],state.scans.map(x=>[gstDate(x.device_local_time),x.scanner_user_id,idFor(x.scanner_user_id),x.device_local_time])],leaves:[['EMPLOYEE','LEAVE TYPE','START','END','STATUS','REASON'],state.leaves.map(x=>[nameFor(x.employee_id),x.leave_type,x.start_date,x.end_date,x.status,x.reason])],people:[['NAME','EMAIL','DEPARTMENT','JOB TITLE','ROLE','STATUS'],state.people.map(x=>[x.full_name,x.email,x.department,x.job_title,x.role,x.active?'Active':'Inactive'])]};
@@ -556,7 +576,7 @@
       if(id==='live-leave-form')return sendLeave();
       if(id==='live-correction-form')return sendCorrection();
       if(id==='lm-invite'){await api('invite',{email:field('mi-email'),full_name:field('mi-name'),department:field('mi-dept'),job_title:field('mi-title'),role:field('mi-role')});closeModal();notify('Email invitation sent. Employee sets their own password.');return;}
-      if(id==='lm-access'){await api('set_access',{user_id:field('ma-id'),role:field('ma-role'),active:field('ma-status')==='true'});closeModal();notify('Employee access updated.');return;}
+      if(id==='lm-access'){await api('set_access',{user_id:field('ma-id'),role:field('ma-role'),active:field('ma-status')==='true',web_clock_enabled:$('ma-web-clock').checked});closeModal();notify('Employee access updated.');return;}
       if(id==='lm-verify'){await api('verify_staff',{device_key:field('mv-device'),scanner_user_id:field('mv-id'),confirm_name:field('mv-name')});closeModal();notify('Scanner identity verified.');return;}
       if(id==='lm-link'){if(!confirm('I have independently verified this scanner ID belongs to the selected employee. Link these identities?'))return;await api('link_staff',{device_key:field('ml-device'),scanner_user_id:field('ml-id'),confirm_name:field('ml-name'),user_id:field('ml-user')});closeModal();notify('Verified scanner ID linked to employee account.');return;}
       if(id==='lm-review'){const type=field('mr-type'),action=type==='leave'?'review_leave':'review_correction';await api(action,{id:field('mr-id'),decision:field('mr-decision'),note:field('mr-note')});closeModal();notify('HR decision recorded. Raw scans remain unchanged.');return;}
