@@ -1,0 +1,50 @@
+/* Companion Helen & Sons Premium Blue appearance for standalone pages.
+   Layout and authentication/report scripts are unchanged. */
+:root{--pb-navy:#082b60;--pb-ink:#0f2a56;--pb-muted:#5b7791;--pb-cyan:#09bedd}
+body.premium-standalone{min-height:100vh!important;margin:0!important;
+ background:radial-gradient(ellipse at 90% 0%,rgba(0,196,224,.55),transparent 42%),
+ linear-gradient(125deg,#082452 0%,#0a639a 55%,#0aa5b9 100%)!important;
+ color:#0d2c55!important;font-family:Inter,"Segoe UI",Arial,sans-serif!important}
+body.premium-standalone header,body.premium-standalone .topbar{
+ background:linear-gradient(116deg,rgba(5,26,71,.94),rgba(8,84,131,.88))!important;
+ color:white!important;border:0!important;border-bottom:1px solid rgba(210,247,255,.17)!important;
+ padding-top:21px!important;padding-bottom:21px!important}
+body.premium-standalone header :is(h1,strong,span),body.premium-standalone header p{color:#fff!important}
+body.premium-standalone header .eyebrow,body.premium-standalone .hero .eyebrow{color:#7ce7ff!important}
+body.premium-standalone .brand img{filter:drop-shadow(0 3px 6px rgba(0,0,0,.24))}
+body.premium-standalone main,body.premium-standalone .main{max-width:1220px!important;margin:28px auto 55px!important;
+ padding:0 20px!important}
+body.premium-standalone .hero{background:transparent!important;border:0!important}
+body.premium-standalone .hero>div>h1,body.premium-standalone .main>section.hero h1{
+ color:#fff!important;font-size:clamp(27px,3vw,39px)!important;letter-spacing:-.035em}
+body.premium-standalone .hero>div>p,body.premium-standalone .hero>.eyebrow{
+ color:#d8f0fd!important}
+body.premium-standalone .panel,body.premium-standalone .metric,body.premium-standalone .stats article{
+ background:linear-gradient(137deg,rgba(250,253,255,.98),rgba(219,241,255,.97))!important;
+ color:#0d2b59!important;border:1px solid rgba(224,251,255,.92)!important;
+ border-radius:22px!important;padding:clamp(17px,2.2vw,26px)!important;
+ box-shadow:0 15px 42px rgba(0,24,73,.2),inset 0 1px 0 #fff!important}
+body.premium-standalone .panel :is(h1,h2,h3),body.premium-standalone .metric strong,body.premium-standalone .stats article strong{color:#0c2a59!important}
+body.premium-standalone .panel p,body.premium-standalone :is(.intro p,.subtle,.note-bottom,.muted,.message){color:#55718e!important}
+body.premium-standalone input,body.premium-standalone select,body.premium-standalone textarea{
+ background:#fff!important;color:#12355f!important;border:1px solid #b8d9e9!important;border-radius:12px!important}
+body.premium-standalone button:not(.secondary),body.premium-standalone .button:not(.secondary),body.premium-standalone .link-button{
+ background:linear-gradient(120deg,#064d9d,#138cce)!important;border:1px solid rgba(167,213,251,.4)!important;
+ color:#fff!important;border-radius:12px!important}
+body.premium-standalone .button.secondary,body.premium-standalone button.secondary,body.premium-standalone .back{
+ background:rgba(237,248,255,.94)!important;color:#124b7c!important;border:1px solid #c2e3f4!important;border-radius:12px!important}
+body.premium-standalone th{color:#4f6e8b!important;background:#e1f2ff!important;letter-spacing:.06em!important}
+body.premium-standalone td{color:#18365c!important;border-color:#d5e8f2!important}
+body.premium-standalone tbody tr:hover{background:#ddf2ff!important}
+body.premium-standalone a{color:#07558c;font-weight:650}
+body.premium-standalone .status,body.premium-standalone .pill{background:#d8f4eb!important;color:#176d55!important}
+body.premium-standalone .status.review{background:#fff0cb!important;color:#986310!important}
+body.premium-standalone .notice{background:#fff3d7!important;color:#745014!important}
+body.premium-standalone #message{background:#eaf7ff;color:#163c67}
+body.premium-standalone .premium-standalone-brand{display:flex;align-items:center;gap:11px;margin-bottom:14px;color:white;
+ font-size:14px;letter-spacing:.045em;font-weight:850}
+body.premium-standalone .premium-standalone-brand img{width:39px;height:39px;object-fit:contain}
+body.premium-standalone .premium-standalone-brand small{display:block;font-size:9px;letter-spacing:.1em;color:#b2dcf4;margin-top:2px}
+body.premium-standalone .foot,body.premium-standalone .foot a{color:#e0f6ff!important}
+body.premium-standalone .panel:has(#requestForm){box-shadow:0 21px 60px rgba(0,17,59,.23)!important}
+@media(max-width:650px){body.premium-standalone main,body.premium-standalone .main{padding:0 12px!important;margin:20px auto!important}}

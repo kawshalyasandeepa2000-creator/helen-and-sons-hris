@@ -17,7 +17,7 @@
     try { document.documentElement.dataset.theme = localStorage.getItem('helen-sons-hris-studio-theme') === 'dark' ? 'dark' : 'light'; }
     catch (_) { document.documentElement.dataset.theme = 'light'; }
   </script>
-<link href="css/dashboard-simplified.css" rel="stylesheet"/><link href="css/brand-navy-white.css" rel="stylesheet"/><link href="css/studio-video-ui.css" rel="stylesheet"/><link href="css/classic-sidebar-cards-mobile.css" rel="stylesheet"/><link href="css/no-operations-terminal.css" rel="stylesheet"/><link href="css/one-row-dashboard-cards.css" rel="stylesheet"/><link href="css/company-assets.css" rel="stylesheet"/><link href="css/role-management-gold.css" rel="stylesheet"/><link href="css/scanner-link.css" rel="stylesheet"/><style id="classic-live-addons">
+<link href="css/dashboard-simplified.css" rel="stylesheet"/><link href="css/brand-navy-white.css" rel="stylesheet"/><link href="css/studio-video-ui.css" rel="stylesheet"/><link href="css/classic-sidebar-cards-mobile.css" rel="stylesheet"/><link href="css/no-operations-terminal.css" rel="stylesheet"/><link href="css/one-row-dashboard-cards.css" rel="stylesheet"/><link href="css/company-assets.css" rel="stylesheet"/><link href="css/role-management-gold.css" rel="stylesheet"/><link href="css/scanner-link.css" rel="stylesheet"/><link href="css/premium-blue-ui.css?v=1" rel="stylesheet"/><style id="classic-live-addons">
 /* Original localhost Studio UI is preserved; these rules only style new live controls. */
 #demo-entry,.demo-entry,#demo-switch-wrap,#mobile-demo-switch-wrap,#mode-warning{display:none!important}
 .live-queue-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:19px 22px;border-bottom:1px solid #e4e7ed}
@@ -158,7 +158,15 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
 <div class="sidebar-bottom"><div class="mobile-demo-switch" id="mobile-demo-switch-wrap"><label for="mobile-demo-user-switch">PREVIEW AS (DEMO)</label><select aria-label="Switch demo user on mobile" id="mobile-demo-user-switch"></select></div><div class="side-hint"><span class="hint-icon">◈</span><div><strong>Helen &amp; Sons HRIS</strong><small>Live · workforce operations</small></div></div><button class="logout-btn" id="logout-btn" type="button"><span>⇥</span> Sign out</button></div>
 </aside>
 <div class="workspace">
-<header class="topbar"><button aria-controls="main-sidebar" aria-expanded="false" aria-label="Open navigation menu" class="mobile-menu-toggle" id="mobile-menu-toggle" type="button">☰</button><div class="mobile-nav-label">HELEN &amp; SONS</div><div class="breadcrumb" id="breadcrumb">Workspace <span>/</span> Overview</div><div class="topbar-actions"><span class="server-state" id="connection-indicator"><span class="state-dot"></span> Connecting</span><div class="demo-switch-wrap hidden" id="demo-switch-wrap"><label for="demo-user-switch">Preview as</label><select aria-label="Switch demo user" id="demo-user-switch"><option value="demo-admin">Administrator</option><option value="demo-e1">Ayesha (Employee)</option><option value="demo-e3">Sarah (HR Manager)</option><option value="demo-e2">Rizwan (Employee)</option></select></div><button aria-label="Open HR Manager leave approval notifications" class="notification-bell hidden" id="top-leave-btn" title="HR Manager leave requests" type="button">✉ <span class="bell-count hidden" id="top-leave-count">0</span></button><button aria-label="View attendance notifications" class="notification-bell" id="top-alert-btn" title="View late attendance alerts" type="button">♧ <span class="bell-count hidden" id="top-alert-count">0</span></button><span class="separator"></span><div class="account-circle" id="user-avatar">HS</div><div class="top-user"><strong id="top-user-name">Administrator</strong><small id="top-user-role">Admin</small></div><div aria-label="Choose color theme" class="theme-switch" role="group">
+<header class="topbar"><button aria-controls="main-sidebar" aria-expanded="false" aria-label="Open navigation menu" class="mobile-menu-toggle" id="mobile-menu-toggle" type="button">☰</button><div class="mobile-nav-label">HELEN &amp; SONS</div><div class="premium-search-wrap" role="search">
+  <div class="premium-search-shell">
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg>
+    <input id="premium-module-search" type="search" autocomplete="off" aria-label="Search available HRIS pages" aria-controls="premium-search-results" aria-expanded="false" placeholder="Search HRIS pages and modules..."/>
+    <span class="premium-key" aria-hidden="true">Ctrl K</span>
+  </div>
+  <div class="premium-search-results" id="premium-search-results" hidden></div>
+</div>
+<div class="breadcrumb" id="breadcrumb">Workspace <span>/</span> Overview</div><div class="topbar-actions"><span class="server-state" id="connection-indicator"><span class="state-dot"></span> Connecting</span><div class="demo-switch-wrap hidden" id="demo-switch-wrap"><label for="demo-user-switch">Preview as</label><select aria-label="Switch demo user" id="demo-user-switch"><option value="demo-admin">Administrator</option><option value="demo-e1">Ayesha (Employee)</option><option value="demo-e3">Sarah (HR Manager)</option><option value="demo-e2">Rizwan (Employee)</option></select></div><button aria-label="Open HR Manager leave approval notifications" class="notification-bell hidden" id="top-leave-btn" title="HR Manager leave requests" type="button">✉ <span class="bell-count hidden" id="top-leave-count">0</span></button><button aria-label="View attendance notifications" class="notification-bell" id="top-alert-btn" title="View late attendance alerts" type="button">♧ <span class="bell-count hidden" id="top-alert-count">0</span></button><span class="separator"></span><div class="account-circle" id="user-avatar">HS</div><div class="top-user"><strong id="top-user-name">Administrator</strong><small id="top-user-role">Admin</small></div><div aria-label="Choose color theme" class="theme-switch" role="group">
 <button aria-pressed="true" class="theme-option" data-theme-choice="dark" title="Switch to dark mode" type="button"><span aria-hidden="true" class="theme-icon">☾</span><span>Dark</span></button>
 <button aria-pressed="false" class="theme-option" data-theme-choice="light" title="Switch to light mode" type="button"><span aria-hidden="true" class="theme-icon">☀</span><span>Light</span></button>
 </div></div></header>
@@ -182,6 +190,34 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
 <button class="studio-tab" data-page="reports" type="button">Reports</button>
 </div>
 <div class="page-heading"><div><span class="eyebrow">YOUR PEOPLE, AT A GLANCE</span><h1 id="greeting">Good morning</h1><p id="today-subtitle">Here is today's HR overview.</p></div><button class="btn btn-outline reload-btn" data-refresh="">↻ Refresh</button></div>
+<section class="premium-analytics" aria-label="Fingerprint activity analytics, based on HR review data">
+  <div class="premium-analytics-card">
+    <div class="premium-chart-heading"><div class="premium-heading-left">
+      <span class="premium-heading-icon" aria-hidden="true">▥</span>
+      <div><h2>7-day scan coverage</h2><p>Employees with recorded fingerprint scans · not confirmed attendance</p></div></div>
+      <span class="premium-period">Last 7 completed days</span>
+    </div>
+    <div class="premium-bars" id="premium-bar-chart" aria-label="Recorded scanner activity by day"></div>
+    <div class="premium-chart-days" id="premium-bar-days" aria-hidden="true"></div>
+    <p class="premium-data-note" id="premium-bar-note" aria-live="polite">Loading authorized HR scanner report…</p>
+  </div>
+  <div class="premium-analytics-card">
+    <div class="premium-chart-heading"><div class="premium-heading-left">
+      <span class="premium-heading-icon" aria-hidden="true">♧</span>
+      <div><h2>Team scan coverage</h2><p>Selected UAE date · scanner records only</p></div></div>
+    </div>
+    <div class="premium-coverage-body">
+      <div class="premium-donut" id="premium-donut" role="img" aria-label="Proportion of HR staff with recorded scans on the selected day">
+        <div class="premium-donut-core"><strong id="premium-covered">—</strong><small>Staff scanned</small></div>
+      </div>
+      <div class="premium-coverage-legend">
+        <div class="premium-legend-row"><span class="premium-legend-dot"></span><span>Has scan</span><strong id="premium-scanned-count">—</strong></div>
+        <div class="premium-legend-row missing"><span class="premium-legend-dot"></span><span>No scan record</span><strong id="premium-no-record-count">—</strong></div>
+      </div>
+    </div>
+    <p class="premium-data-note" id="premium-coverage-note" aria-live="polite">Loading verified team report…</p>
+  </div>
+</section>
 <div class="overview-action-strip">
 <button class="overview-shortcut" data-page="corrections" type="button"><span class="shortcut-icon">⇄</span><span><small>PENDING TIME CORRECTIONS</small><strong id="metric-corrections">0</strong></span><span class="shortcut-arrow">↗</span></button>
 <button class="overview-shortcut" data-page="leaves" type="button"><span class="shortcut-icon">▦</span><span><small>ANNUAL LEAVE REMAINING</small><strong id="metric-leave-balance">—</strong></span><span class="shortcut-arrow">↗</span></button>
@@ -191,7 +227,23 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
 <button aria-label="View today’s clocked-in attendance" class="metric-card metric-teal metric-link" data-page="attendance" title="View today’s clocked-in attendance" type="button"><span class="card-symbol">✦</span><span class="metric-title">Clocked IN today</span><strong id="metric-in">0</strong><small>Currently on duty</small><span aria-hidden="true" class="studio-card-footer"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span><span aria-hidden="true" class="metric-open">↗</span></button>
 <button aria-label="View today’s late check-in notifications" class="metric-card metric-violet metric-link" data-page="alerts" title="View today’s late check-in notifications" type="button"><span class="card-symbol">◇</span><span class="metric-title">Late check-ins</span><strong id="metric-late">0</strong><small>After the grace period</small><span aria-hidden="true" class="studio-card-footer"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span><span aria-hidden="true" class="metric-open">↗</span></button>
 <button aria-label="View pending leave requests" class="metric-card metric-deep metric-link" data-page="leaves" title="View pending leave requests" type="button"><span class="card-symbol">✓</span><span class="metric-title">Pending leave</span><strong id="metric-pending">0</strong><small id="metric-pending-caption">Awaiting HR Manager decision</small><span aria-hidden="true" class="studio-card-footer"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span><span aria-hidden="true" class="metric-open">↗</span></button>
-</div></div><div class="overview-middle"><div class="panel workflow-panel"><span class="panel-kicker">WORKFLOW AT A GLANCE</span><h2>Leave application pipeline</h2><p>Current status of submitted requests</p><div class="workflow-counts"><div><span>Pending</span><strong id="workflow-pending">0</strong></div><div><span>Approved</span><strong id="workflow-approved">0</strong></div><div><span>Rejected</span><strong id="workflow-rejected">0</strong></div></div><div class="studio-utility-stack">
+</div></div><section class="premium-lower-overview" aria-label="Employee accounts and fingerprint device snapshot">
+ <div class="panel data-panel premium-people-panel">
+  <div class="panel-title-row premium-people-heading">
+   <div><span class="panel-kicker">YOUR WORKFORCE</span><h2>People &amp; Access</h2><p>HRIS login accounts · employee permissions stay unchanged.</p></div>
+   <div class="premium-people-actions"><input id="premium-people-filter" type="search" autocomplete="off" aria-label="Filter visible employee accounts" placeholder="Search accounts..."/><button class="btn btn-primary" data-page="employees" type="button">View Employees ↗</button></div>
+  </div>
+  <div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>EMAIL</th><th>DEPARTMENT</th><th>ROLE</th><th>STATUS</th><th>ACCESS</th></tr></thead><tbody id="premium-people-body"><tr><td colspan="6">Awaiting secure sign-in.</td></tr></tbody></table></div>
+ </div>
+ <div class="panel premium-fingerprint-panel">
+   <div class="premium-fingerprint-title"><span class="premium-heading-icon" aria-hidden="true">◎</span><div><h2>Fingerprint Activity</h2><p>Recorded raw scans · no automatic IN/OUT classification.</p></div></div>
+   <div class="premium-activity-item"><span class="premium-activity-icon" aria-hidden="true">↗</span><div><small>Raw scans today</small><strong id="premium-raw-scans">—</strong></div><span class="premium-activity-meta">Device events</span></div>
+   <div class="premium-activity-item"><span class="premium-activity-icon" aria-hidden="true">♙</span><div><small>Verified HR roster</small><strong id="premium-roster-count">—</strong></div><span class="premium-activity-meta">Admin / HR report</span></div>
+   <div class="premium-activity-item"><span class="premium-activity-icon" aria-hidden="true">⇄</span><div><small>IN / OUT confirmation</small><strong class="premium-review-value">HR review</strong></div><span class="premium-activity-meta">Provisional times</span></div>
+   <p class="premium-activity-notice">No scan is automatically counted as confirmed IN, OUT or absence. Use the verified team report below for review.</p>
+ </div>
+</section>
+<div class="overview-middle"><div class="panel workflow-panel"><span class="panel-kicker">WORKFLOW AT A GLANCE</span><h2>Leave application pipeline</h2><p>Current status of submitted requests</p><div class="workflow-counts"><div><span>Pending</span><strong id="workflow-pending">0</strong></div><div><span>Approved</span><strong id="workflow-approved">0</strong></div><div><span>Rejected</span><strong id="workflow-rejected">0</strong></div></div><div class="studio-utility-stack">
 <button data-page="employees" type="button"><span class="studio-utility-icon">◎</span><span><strong>People directory</strong><small>Employee profiles and teams</small></span><span class="studio-utility-arr">↗</span></button>
 <button data-page="leaves" type="button"><span class="studio-utility-icon">▦</span><span><strong>Leave workspace</strong><small>Apply and track your requests</small></span><span class="studio-utility-arr">↗</span></button>
 <button data-page="assets" type="button"><span class="studio-utility-icon">▣</span><span><strong>Company assets</strong><small>Phones, SIM cards and laptops</small></span><span class="studio-utility-arr">↗</span></button>
@@ -1076,5 +1128,6 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
 })();
 
 </script>
+<script src="js/premium-blue-ui.js?v=1" defer></script>
 </body>
 </html>
