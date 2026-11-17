@@ -1,0 +1,17 @@
+Helen & Sons HRIS — 7-day chart data source repair
+Only the TWO website files in this ZIP need replacing:
+  1) Repository root: index.html
+  2) Repository js/ folder: premium-blue-ui.js
+
+This is based on the Premium Blue HRIS site version previously shared in this chat. Back up the live repository before overwriting if newer changes were made.
+
+GitHub website method:
+- Upload index.html at the ROOT of the existing repository; commit.
+- Open js/ in the repository and upload premium-blue-ui.js there; commit.
+- Do not upload this ZIP itself and do not place any files in a new nested folder.
+- Check Cloudflare Pages > Deployments: successful PRODUCTION deployment on the connected branch.
+- Open a new private browser window and sign in to the production site.
+- On the chart look for: "live + historical records" under 7-day scan coverage.
+- Verify 2026-11-14=14 and 2026-11-16=17 given DB record counts confirmed 2026-11-17.
+
+Does not change the database, the fingerprint connector, or attendance approvals.

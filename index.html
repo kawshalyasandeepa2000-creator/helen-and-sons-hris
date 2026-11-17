@@ -17,7 +17,7 @@
     try { document.documentElement.dataset.theme = localStorage.getItem('helen-sons-hris-studio-theme') === 'dark' ? 'dark' : 'light'; }
     catch (_) { document.documentElement.dataset.theme = 'light'; }
   </script>
-<link href="css/dashboard-simplified.css" rel="stylesheet"/><link href="css/brand-navy-white.css" rel="stylesheet"/><link href="css/studio-video-ui.css" rel="stylesheet"/><link href="css/classic-sidebar-cards-mobile.css" rel="stylesheet"/><link href="css/no-operations-terminal.css" rel="stylesheet"/><link href="css/one-row-dashboard-cards.css" rel="stylesheet"/><link href="css/company-assets.css" rel="stylesheet"/><link href="css/role-management-gold.css" rel="stylesheet"/><link href="css/scanner-link.css" rel="stylesheet"/><link href="css/premium-blue-ui.css?v=1" rel="stylesheet"/><style id="classic-live-addons">
+<link href="css/dashboard-simplified.css" rel="stylesheet"/><link href="css/brand-navy-white.css" rel="stylesheet"/><link href="css/studio-video-ui.css" rel="stylesheet"/><link href="css/classic-sidebar-cards-mobile.css" rel="stylesheet"/><link href="css/no-operations-terminal.css" rel="stylesheet"/><link href="css/one-row-dashboard-cards.css" rel="stylesheet"/><link href="css/company-assets.css" rel="stylesheet"/><link href="css/role-management-gold.css" rel="stylesheet"/><link href="css/scanner-link.css" rel="stylesheet"/><link href="css/premium-blue-ui.css?v=2" rel="stylesheet"/><style id="classic-live-addons">
 /* Original localhost Studio UI is preserved; these rules only style new live controls. */
 #demo-entry,.demo-entry,#demo-switch-wrap,#mobile-demo-switch-wrap,#mode-warning{display:none!important}
 .live-queue-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:19px 22px;border-bottom:1px solid #e4e7ed}
@@ -408,7 +408,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   const $ = id => document.getElementById(id);
   const html = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const DAY = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dubai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-  const state = {client:null,user:null,profile:null,people:[],staff:[],scans:[],daily:[],web:[],leaves:[],corrections:[],assets:[],historyData:null,historyFetchedAt:0,historyLoading:false,historyError:null,teamData:null,teamLoading:false,teamError:null,teamFetchedAt:0,teamDate:DAY(),page:'overview',date:DAY(),busy:false,loaded:false};
+  const state = {client:null,user:null,profile:null,people:[],staff:[],scans:[],daily:[],web:[],leaves:[],corrections:[],assets:[],historyData:null,historyFetchedAt:0,historyLoading:false,historyError:null,coverage7:null,coverageFetchedAt:0,coverageLoading:false,coverageError:null,teamData:null,teamLoading:false,teamError:null,teamFetchedAt:0,teamDate:DAY(),page:'overview',date:DAY(),busy:false,loaded:false};
   let bulkRows = [];
   let bulkReviewed = false;
   let historyCandidateRows = [];
@@ -527,7 +527,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     if(!state.people.some(p=>p.id===state.profile.id))state.people.push(state.profile);
     state.loaded=true;
     renderCurrent();
-    if(manager()){void loadDashboardHistory();void loadTeamDashboard();}
+    if(manager()){void loadDashboardHistory();void loadTeamDashboard();void loadSevenDayCoverage();}
   }
 
   /* DAILY TEAM FINGERPRINT SUMMARY (ADMIN + HR): no payroll approval, no login linking. */
@@ -654,6 +654,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   function resetHistoryDashboard(){
     state.historyData=null;state.historyFetchedAt=0;state.historyLoading=false;state.historyError=null;
     historyReportData=null;resetTeamDashboard();
+    state.coverage7=null;state.coverageFetchedAt=0;state.coverageLoading=false;state.coverageError=null;publishSevenDayCoverage();
     for(const scope of h7Scopes){
       const body=$(`h7-${scope}-body`);if(body)body.innerHTML='<tr><td colspan="6" class="h7-loading">Awaiting administrator sign in.</td></tr>';
       $(`h7-${scope}-panel`)?.classList.add('hidden');
@@ -706,6 +707,52 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     </tr>`).join(''):'<tr><td colspan="6" class="h7-loading">No records match the selected filters.</td></tr>';
   }
   function renderBothHistoryDashboards(){for(const scope of h7Scopes)renderHistoryDashboard(scope);}
+  /* Real 7-day dashboard coverage, combining historical AND live scanner events.
+     Uses the existing admin/HR Edge Function; no direct privileged table access,
+     database write, attendance approval or scanner checkpoint modifications.
+     A failed date is shown as unknown (—), NEVER silently as zero. */
+  const completedUaeDays=()=>{
+    const today=Date.parse(DAY()+'T00:00:00Z');
+    return Array.from({length:7},(_,i)=>new Date(today+(i-7)*86400000).toISOString().slice(0,10));
+  };
+  function publishSevenDayCoverage(){
+    document.dispatchEvent(new CustomEvent('hris:coverage-7',{detail:{
+      days:state.coverage7?.days||[],loading:state.coverageLoading,
+      error:state.coverageError||null
+    }}));
+  }
+  async function loadSevenDayCoverage(force=false){
+    if(!manager()||!state.user||!state.client||state.coverageLoading)return;
+    const days=completedUaeDays(),weekKey=days.join('|');
+    if(!force && state.coverage7?.weekKey===weekKey && Date.now()-state.coverageFetchedAt<180000){
+      publishSevenDayCoverage();return;
+    }
+    state.coverageLoading=true;state.coverageError=null;publishSevenDayCoverage();
+    const uid=state.user.id;
+    const results=[];
+    try{
+      // Limit concurrency; 7 authenticated, read-only report calls per refresh.
+      for(let start=0;start<days.length;start+=3){
+        const group=await Promise.all(days.slice(start,start+3).map(async date=>{
+          try{
+            const {data,error}=await state.client.functions.invoke('hris-team-attendance',{
+              body:{action:'report',date}
+            });
+            if(error||!data?.ok||data.date!==date||!Array.isArray(data.rows))throw Error('Report unavailable');
+            if(!data.rows.every(r=>Number.isFinite(Number(r.count))&&Number(r.count)>=0))throw Error('Invalid scan totals');
+            return {date,covered:data.rows.filter(r=>Number(r.count)>0).length};
+          }catch(e){console.warn('7-day scan coverage unavailable:',date,e?.message||e);return {date,covered:null};}
+        }));
+        results.push(...group);
+      }
+      if(!manager()||state.user?.id!==uid)return;
+      state.coverage7={weekKey,days:results};
+      state.coverageFetchedAt=Date.now();
+      if(results.some(d=>d.covered===null))state.coverageError='Some dates were not available; refresh to retry.';
+    }finally{
+      if(state.user?.id===uid){state.coverageLoading=false;publishSevenDayCoverage();}
+    }
+  }
   async function loadDashboardHistory(force=false){
     if(!manager()||!state.client)return;
     if(state.historyLoading)return;
@@ -1068,7 +1115,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     if(button.id==='top-leave-btn'){switchPage('approvals');return;}
     if(button.hasAttribute('data-team-reload')){await loadTeamDashboard(true);notify('Team attendance refreshed.');return;}
     if(button.hasAttribute('data-team-export')){downloadTeamCsv();return;}
-    if(button.hasAttribute('data-h7-reload')){await loadDashboardHistory(true);notify('Seven-day fingerprint history refreshed.');return;}
+    if(button.hasAttribute('data-h7-reload')){await Promise.all([loadDashboardHistory(true),loadSevenDayCoverage(true)]);notify('Seven-day fingerprint reports refreshed.');return;}
     if(button.hasAttribute('data-h7-download')){if(manager() && state.historyData){historyReportData=state.historyData;downloadHistoryReport();}return;}
     if(button.id==='history-upload-open'){openHistoryUpload();return;}
     if(button.id==='history-report-open'){await actionBusy(()=>showHistoryReport());return;}
@@ -1128,6 +1175,6 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
 })();
 
 </script>
-<script src="js/premium-blue-ui.js?v=1" defer></script>
+<script src="js/premium-blue-ui.js?v=2" defer></script>
 </body>
 </html>
