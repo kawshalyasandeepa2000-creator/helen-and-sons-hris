@@ -47,39 +47,33 @@
     return new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',timeZone:'UTC'}).format(d);
   }
   const valueFrom=(id)=>Number.parseInt($(id)?.textContent?.trim()||'',10);
+  let sevenDayCoverage={days:[],loading:false,error:null};
   function renderChart(){
     const historyPanel=$('h7-overview-panel');
     const allowed=!$('app-screen')?.classList.contains('hidden')&&!!historyPanel&&!historyPanel.classList.contains('hidden');
     const chart=$('premium-bar-chart'),labels=$('premium-bar-days'),note=$('premium-bar-note');
     const donut=$('premium-donut'),pct=$('premium-covered'),coverageNote=$('premium-coverage-note');
     if(!chart||!labels||!note||!donut||!pct||!coverageNote)return;
-    const historyFiltered=!!($('h7-overview-search')?.value?.trim() || $('h7-overview-date')?.value || ($('h7-overview-status')?.value && $('h7-overview-status').value!=='all'));
-    const historyRows=allowed&&!historyFiltered?[...($('h7-overview-body')?.querySelectorAll('tr')||[])]:[];
-    const byDate=new Map();
-    for(const row of historyRows){
-      const cells=row.cells;if(cells.length<6)continue;
-      const day=cells[1].textContent.trim();const n=Number.parseInt(cells[4].textContent.trim(),10);
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!Number.isFinite(n))continue;
-      const old=byDate.get(day)||{covered:0,recorded:0};
-      old.covered+=n>0?1:0;old.recorded+=n;
-      byDate.set(day,old);
-    }
-    const days=[...byDate.keys()].sort().slice(-7);
-    const maxValue=Math.max(1,...days.map(d=>byDate.get(d).covered));
+    // Do not derive the chart from the historical-review-only HTML table.
+    // Admin/HR report below merges verified historical + live scanner events.
+    const days=sevenDayCoverage.days;
+    const maxValue=Math.max(1,...days.filter(d=>Number.isFinite(d.covered)).map(d=>d.covered));
     chart.replaceChildren();labels.replaceChildren();
     for(let i=0;i<7;i++){
-      const date=days[i],n=date?byDate.get(date).covered:null;
+      const day=days[i],n=day&&Number.isFinite(day.covered)?day.covered:null;
       const col=document.createElement('div');col.className='premium-bar-col';
       const label=document.createElement('span');label.className='premium-bar-number';label.textContent=n===null?'—':String(n);
       const bar=document.createElement('span');bar.className='premium-bar';
-      bar.style.setProperty('--bar-height', n===null?'6%':`${Math.max(4,100*n/maxValue)}%`);
+      bar.style.setProperty('--bar-height',n===null?'6%':`${Math.max(4,100*n/maxValue)}%`);
+      if(n===null)bar.classList.add('premium-bar-unavailable');
       col.append(label,bar);chart.append(col);
-      const tick=document.createElement('span');tick.textContent=date?shortDay(date):'—';labels.append(tick);
+      const tick=document.createElement('span');tick.textContent=day?shortDay(day.date):'—';labels.append(tick);
     }
     note.textContent=!allowed?'7-day scan coverage is available to authorized Admin / HR accounts only.':
-      historyFiltered?'Clear the historical report filters below to see full 7-day coverage.':
-      days.length? 'Recorded scanner activity from the visible 7-day HR review report. A scan is not approved IN/OUT.':
-      'Waiting for the authorized 7-day scanner report. Refresh history below if needed.';
+      sevenDayCoverage.loading?'Loading the verified 7-day fingerprint report…':
+      sevenDayCoverage.error?sevenDayCoverage.error:
+      days.length===7?'Verified employee IDs with at least one scan per day · live + historical records · not approved IN/OUT.':
+      'Waiting for the authorized 7-day scanner report.';
 
     const teamPanel=$('team-overview-panel');
     const teamAllowed=!!teamPanel&&!teamPanel.classList.contains('hidden')&&allowed;
@@ -105,6 +99,11 @@
       'Waiting for the verified team report. No scan count is assumed.';
   }
   function setupCharts(){
+    document.addEventListener('hris:coverage-7',e=>{
+      const d=e.detail||{};
+      sevenDayCoverage={days:Array.isArray(d.days)?d.days:[],loading:!!d.loading,error:d.error||null};
+      renderChart();
+    });
     renderChart();
     for(const id of ['h7-overview-body','team-overview-body']){
       const el=$(id);if(el)new MutationObserver(renderChart).observe(el,{childList:true});
