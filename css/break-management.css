@@ -99,3 +99,52 @@ html[data-theme="dark"] #page-breaks .break-tab.current{background:#1568d8;borde
 html[data-theme="dark"] #page-breaks .break-filters input,
 html[data-theme="dark"] #page-breaks .break-mapping-form select{background:#122036;color:#f3f7ff;border-color:#38506b}
 html[data-theme="dark"] #page-breaks .break-tag-generated input{background:#172944;color:#fff;border-color:#4c6080}
+
+/* 2026-11-18: Premium Blue + Break Management readable text hotfix.
+   The general Premium Blue theme sets page foreground white. Light break cards MUST
+   explicitly override that inherited color, including both global light/dark modes. */
+html #page-breaks .break-stat,
+html #page-breaks .break-progress-shell,
+html #page-breaks .break-scan-panel,
+html #page-breaks .break-history,
+html #page-breaks .break-admin-tools {
+  background:#f8fcff !important;
+  color:#102e53 !important;
+  border-color:#c7deee !important;
+}
+html #page-breaks :is(.break-stat,.break-progress-shell,.break-scan-panel,.break-history,.break-admin-tools)
+  :is(h2,h3,strong,small,p,span,label,th,td,li,time) { color:inherit; }
+html #page-breaks .break-stat small,
+html #page-breaks .break-stat span,
+html #page-breaks .break-help,
+html #page-breaks .break-section-head p,
+html #page-breaks th { color:#53708b !important; opacity:1 !important; }
+html #page-breaks .break-stat strong,
+html #page-breaks .break-scan-panel h2,
+html #page-breaks .break-progress-top strong,
+html #page-breaks .break-section-head h2 { color:#0e325f !important; }
+html #page-breaks .break-stat strong.break-success { color:#107d5c !important; }
+html #page-breaks .break-stat strong.break-danger { color:#b72c32 !important; }
+html #page-breaks .break-stat strong.break-danger,html #page-breaks .break-danger { color:#b72c32 !important; }
+html #page-breaks .break-scan-panel p { color:#4a6a88 !important; opacity:1 !important; }
+html #page-breaks .break-progress-top { color:#163b64 !important; }
+html #page-breaks .break-pill { color:#eafbff !important; background:rgba(2,28,76,.35) !important; border:1px solid rgba(220,249,255,.5) !important; }
+html #page-breaks .break-tab:not(.current){background:#f8fcff !important;color:#14436b !important;border-color:#b9d8ed !important;}
+html #page-breaks .break-tab.current {background:#1568d8 !important;color:#fff !important;border-color:#1568d8 !important;}
+html #page-breaks .break-main-button {color:white !important;background:linear-gradient(115deg,#145fd3,#1888ee) !important;}
+html #page-breaks .break-main-button:disabled {opacity:.60 !important;}
+html #page-breaks .break-tag-generated label,
+html #page-breaks .break-notification-list li,
+html #page-breaks .break-mapping p{color:#183d62 !important;}
+html #page-breaks .break-filters input,
+html #page-breaks .break-mapping-form select,
+html #page-breaks .break-tag-generated input {background:#fff !important;color:#14375b !important;}
+html #page-breaks .break-notification-list time {color:#5c7391 !important;}
+html #page-breaks .break-emp-button{color:#0a63ba !important;}
+html #page-breaks .break-confirm {color:#11365d !important;background:#eaf5ff !important;}
+html #page-breaks [hidden] {display:none !important;}
+@media (max-width:520px){
+  html #page-breaks .break-tab{flex:1 0 auto;text-align:center;}
+  html #page-breaks .break-scan-panel{max-width:100%;}
+  html #page-breaks .break-grid-cards{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
