@@ -17,7 +17,7 @@
     try { document.documentElement.dataset.theme = localStorage.getItem('helen-sons-hris-studio-theme') === 'dark' ? 'dark' : 'light'; }
     catch (_) { document.documentElement.dataset.theme = 'light'; }
   </script>
-<link href="css/dashboard-simplified.css" rel="stylesheet"/><link href="css/brand-navy-white.css" rel="stylesheet"/><link href="css/studio-video-ui.css" rel="stylesheet"/><link href="css/classic-sidebar-cards-mobile.css" rel="stylesheet"/><link href="css/no-operations-terminal.css" rel="stylesheet"/><link href="css/one-row-dashboard-cards.css" rel="stylesheet"/><link href="css/company-assets.css" rel="stylesheet"/><link href="css/role-management-gold.css" rel="stylesheet"/><link href="css/scanner-link.css" rel="stylesheet"/><link href="css/premium-blue-ui.css?v=2" rel="stylesheet"/><style id="classic-live-addons">
+<link href="css/dashboard-simplified.css" rel="stylesheet"/><link href="css/brand-navy-white.css" rel="stylesheet"/><link href="css/studio-video-ui.css" rel="stylesheet"/><link href="css/classic-sidebar-cards-mobile.css" rel="stylesheet"/><link href="css/no-operations-terminal.css" rel="stylesheet"/><link href="css/one-row-dashboard-cards.css" rel="stylesheet"/><link href="css/company-assets.css" rel="stylesheet"/><link href="css/role-management-gold.css" rel="stylesheet"/><link href="css/scanner-link.css" rel="stylesheet"/><link href="css/premium-blue-ui.css?v=2" rel="stylesheet"/><link href="css/break-management.css?v=1" rel="stylesheet"/><style id="classic-live-addons">
 /* Original localhost Studio UI is preserved; these rules only style new live controls. */
 #demo-entry,.demo-entry,#demo-switch-wrap,#mobile-demo-switch-wrap,#mode-warning{display:none!important}
 .live-queue-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:19px 22px;border-bottom:1px solid #e4e7ed}
@@ -431,6 +431,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   const formatDay = date => new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'numeric',month:'short',year:'numeric'}).format(new Date((date||DAY())+'T12:00:00Z'));
   const caps = (s='') => String(s).trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase() || 'HS';
   function showLogin(mode='login'){
+    window.HRIS_BREAKS?.onLogout();
     $('app-screen').classList.add('hidden');$('auth-screen').classList.remove('hidden');
     $('login-view').classList.toggle('hidden',mode!=='login');$('forgot-view').classList.toggle('hidden',mode!=='forgot');$('password-view').classList.add('hidden');
     $('setup-alert').classList.add('hidden');$('demo-entry').classList.add('hidden');
@@ -494,6 +495,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     showHistoryDashboardVisibility();
     showTeamDashboardVisibility();
     switchPage(state.page);
+    window.HRIS_BREAKS?.onLogin({client:state.client,user:state.user,profile:state.profile});
   }
   function switchPage(page){
     if(!state.profile)return;
@@ -502,10 +504,11 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     state.page=page;
     document.querySelectorAll('section.page').forEach(p=>p.classList.toggle('hidden',p.id!=='page-'+page));
     document.querySelectorAll('[data-page]').forEach(item=>item.classList.toggle('active',item.dataset.page===page));
-    const label={overview:'Overview',attendance:'Attendance',scans:'Fingerprint scans','scanner-staff':'Scanner staff',employees:'Employees',leaves:'Leave requests',approvals:'HR approvals',corrections:'Time corrections',assets:'Company assets',reports:'Reports & exports',account:'My account'}[page]||'Overview';
+    const label={overview:'Overview',attendance:'Attendance',scans:'Fingerprint scans','scanner-staff':'Scanner staff',employees:'Employees',leaves:'Leave requests',approvals:'HR approvals',corrections:'Time corrections',assets:'Company assets',reports:'Reports & exports',account:'My account',breaks:'Break Management'}[page]||'Overview';
     $('breadcrumb').innerHTML='Workspace <span>/</span> '+html(label);
     navMenu(false);
     renderCurrent();
+    window.HRIS_BREAKS?.onPageChange(page);
   }
   async function safely(query, label){try{const {data,error}=await query;if(error)throw error;return data||[]}catch(err){console.warn('HRIS query unavailable:',label,err?.message);return [];}}
   async function loadData(){
@@ -1176,5 +1179,6 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
 
 </script>
 <script src="js/premium-blue-ui.js?v=2" defer></script>
+<script src="js/break-management.js?v=1" defer></script>
 </body>
 </html>
