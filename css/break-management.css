@@ -1,0 +1,101 @@
+/* Helen & Sons HRIS | mobile-first break management, isolated classes */
+#page-breaks{max-width:1220px;margin:0 auto;padding-bottom:36px}
+#page-breaks .break-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 20px}
+#page-breaks .break-heading h1{font-size:clamp(25px,4vw,33px);margin:4px 0 7px;font-weight:800;line-height:1.15}
+#page-breaks .break-heading p{opacity:.73;line-height:1.5;font-size:14px;margin:0;max-width:700px}
+#page-breaks .break-pill{padding:10px 14px;border-radius:999px;background:rgba(22,104,211,.12);color:#2275d6;font-weight:800;white-space:nowrap}
+#page-breaks .break-tabs{display:flex;gap:9px;margin:0 0 22px;overflow-x:auto}
+#page-breaks .break-tab{padding:12px 18px;border-radius:12px;border:1px solid rgba(99,121,155,.25);font-size:14px;font-weight:700;background:var(--panel-bg,#fff);color:inherit;cursor:pointer;white-space:nowrap}
+#page-breaks .break-tab.current{color:#fff;background:#1568d8;border-color:#1568d8}
+#page-breaks .break-grid-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
+#page-breaks .break-stat,#page-breaks .break-progress-shell,#page-breaks .break-scan-panel,#page-breaks .break-history,#page-breaks .break-admin-tools{border:1px solid rgba(128,154,188,.22);border-radius:17px;background:var(--panel-bg,var(--card-bg,#fff));box-shadow:0 4px 20px rgba(9,46,93,.04)}
+#page-breaks .break-stat{padding:18px;display:flex;flex-direction:column;gap:6px;min-width:0}
+#page-breaks .break-stat small{opacity:.68;font-size:12px;font-weight:700}
+#page-breaks .break-stat strong{font-size:clamp(25px,3vw,36px);line-height:1.15;font-weight:800;overflow-wrap:anywhere}
+#page-breaks .break-stat span{font-size:12px;opacity:.7}
+#page-breaks .break-danger{color:#d4493f!important}
+#page-breaks .break-success{color:#148e67!important}
+#page-breaks .break-progress-shell{padding:17px 19px;margin-bottom:17px}
+#page-breaks .break-progress-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:12px;font-size:14px}
+#page-breaks .break-track{height:10px;background:#e3ecf7;border-radius:20px;overflow:hidden}
+#page-breaks .break-track span{display:block;height:100%;background:linear-gradient(90deg,#1d70df,#10b4ae);border-radius:20px;transition:width .5s}
+#page-breaks .break-track span.over{background:#df584d}
+#page-breaks .break-scan-panel{padding:26px 20px;text-align:center;max-width:680px;margin:0 auto 22px}
+#page-breaks .break-scan-icon{font-size:45px;margin-bottom:5px}
+#page-breaks .break-scan-panel h2{font-size:23px;font-weight:800;line-height:1.25;margin:4px 0 10px}
+#page-breaks .break-scan-panel p{font-size:14px;opacity:.8;line-height:1.6;max-width:470px;margin:8px auto 18px}
+#page-breaks .break-main-button{display:block;margin:15px auto 10px;padding:16px 19px;border-radius:13px;color:#fff;font-size:16px;font-weight:750;background:linear-gradient(115deg,#145fd3,#1888ee);border:none;width:100%;max-width:440px;min-height:54px;cursor:pointer;box-shadow:0 9px 22px rgba(22,104,211,.22)}
+#page-breaks .break-main-button:disabled{cursor:not-allowed;opacity:.5}
+#page-breaks .break-help{font-size:12px!important;opacity:.67!important;line-height:1.5!important}
+#page-breaks .break-live-timer{font-weight:700;color:#168b67;margin:12px}
+#page-breaks .break-camera-panel{max-width:480px;margin:14px auto}
+#page-breaks #break-reader{background:#071625;border-radius:10px;overflow:hidden;min-height:100px}
+#page-breaks .break-camera-actions{display:flex;gap:10px;justify-content:center;margin:12px 0;flex-wrap:wrap}
+#page-breaks .break-file-label{border:1px solid #9eb8d4;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+#page-breaks .break-confirm{background:rgba(17,105,200,.08);border:1px solid #76b9ff;border-radius:12px;padding:15px;margin:18px auto;max-width:460px}
+#page-breaks .break-confirm strong{display:block}
+#page-breaks .break-history{margin-top:18px;padding:20px}
+#page-breaks .break-section-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:13px;margin-bottom:15px}
+#page-breaks .break-section-head h2{font-size:19px;margin:0 0 4px}
+#page-breaks .break-section-head p{margin:0;opacity:.7;font-size:13px}
+#page-breaks .break-filters{display:flex;flex-wrap:wrap;gap:12px}
+#page-breaks .break-filters label{display:grid;gap:5px;font-size:12px;min-width:140px}
+#page-breaks .break-filters input{padding:9px 12px;border:1px solid #aabbd2;border-radius:8px;width:100%;max-width:250px}
+#page-breaks .break-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#page-breaks table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+#page-breaks th,#page-breaks td{padding:13px 10px;text-align:left;border-bottom:1px solid rgba(105,127,160,.2)}
+#page-breaks th{font-size:11px;letter-spacing:.04em;opacity:.7}
+#page-breaks .break-emp-button{border:0;background:transparent;text-align:left;cursor:pointer;color:#146ed7;padding:2px 0}
+#page-breaks .break-emp-button small{display:block;color:inherit;opacity:.7;margin-top:4px}
+#page-breaks .break-tag{display:inline-block;background:rgba(115,131,151,.12);padding:7px 10px;border-radius:9px;font-size:11px;font-weight:700}
+#page-breaks .break-tag.on{background:rgba(0,162,103,.15);color:#149365}
+#page-breaks .break-admin-tools{padding:16px 18px;margin:16px 0;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+#page-breaks .break-admin-tools p{font-size:12px;opacity:.72;margin:6px 0}
+#page-breaks #break-admin-tag{width:100%}
+#page-breaks .break-tag-generated{border-top:1px solid #d2dfea;padding:14px 0}
+#page-breaks #break-qr-image{width:220px;max-width:100%;margin:12px auto;background:#fff;padding:10px}
+#page-breaks .break-tag-generated label{display:block;margin:12px 0;font-size:12px;font-weight:700}
+#page-breaks .break-tag-generated input{display:block;width:100%;font-size:12px;padding:10px;border-radius:8px;border:1px solid #a3b0c0;margin-top:5px}
+#page-breaks .break-notification-list{list-style:none;padding:0;margin:0}
+#page-breaks .break-notification-list li{padding:13px 5px;border-bottom:1px solid rgba(111,128,152,.17);display:flex;justify-content:space-between;gap:15px;line-height:1.5;font-size:13px}
+#page-breaks .break-notification-list time{opacity:.6;white-space:nowrap;font-size:12px}
+.break-toast{position:fixed;right:22px;bottom:24px;z-index:999999;max-width:min(420px,calc(100vw - 32px));padding:15px 20px;background:#073766;color:white;border-radius:13px;box-shadow:0 12px 40px rgba(3,32,76,.3);opacity:0;pointer-events:none;transform:translateY(15px);transition:.2s;line-height:1.4}
+.break-toast.show{opacity:1;transform:translateY(0)}.break-toast.problem{background:#9e3127}
+#page-breaks .break-error{border-radius:12px;padding:24px;background:rgba(208,55,55,.09);color:#c12a29}
+#page-breaks .break-skeleton{padding:30px;text-align:center;opacity:.7}
+@media(max-width:720px){
+ #page-breaks{padding:8px 0 80px}
+ #page-breaks .break-heading{align-items:flex-start;flex-direction:column;gap:11px}
+ #page-breaks .break-heading h1{font-size:27px}
+ #page-breaks .break-grid-cards{gap:8px}
+ #page-breaks .break-stat{padding:12px 9px;border-radius:12px}
+ #page-breaks .break-stat small{font-size:10px}
+ #page-breaks .break-stat strong{font-size:clamp(18px,5.3vw,26px)}
+ #page-breaks .break-stat span{font-size:10px;line-height:1.4}
+ #page-breaks .break-history{padding:15px 10px}
+ #page-breaks .break-scan-panel{padding:22px 13px}
+ #page-breaks .break-main-button{position:relative;min-height:57px;font-size:16px}
+ #page-breaks .break-section-head{align-items:stretch;flex-direction:column}
+ #page-breaks .break-filters{width:100%}
+ #page-breaks .break-filters label{flex:1;min-width:125px}
+ #page-breaks .break-notification-list li{flex-wrap:wrap;gap:4px}
+ .break-toast{right:12px;bottom:12px}
+}
+@media(max-width:350px){#page-breaks .break-grid-cards{grid-template-columns:1fr 1fr}#page-breaks .break-stat:last-child{grid-column:1/-1}}
+#page-breaks .break-mapping{border-top:1px solid rgba(111,145,188,.35);padding-top:18px}
+#page-breaks .break-mapping h3{margin:0 0 8px;font-size:17px}
+#page-breaks .break-mapping p{font-size:12px;opacity:.75;line-height:1.5}
+#page-breaks .break-mapping td small{display:block;font-size:11px;opacity:.7}
+#page-breaks .break-mapping-form{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin:16px 0}
+#page-breaks .break-mapping-form label{font-size:12px;display:grid;gap:6px;flex:1;min-width:200px}
+#page-breaks .break-mapping-form select{padding:11px;border:1px solid #aabbd2;border-radius:8px;max-width:100%;width:100%}
+html[data-theme="dark"] #page-breaks .break-stat,
+html[data-theme="dark"] #page-breaks .break-progress-shell,
+html[data-theme="dark"] #page-breaks .break-scan-panel,
+html[data-theme="dark"] #page-breaks .break-history,
+html[data-theme="dark"] #page-breaks .break-admin-tools,
+html[data-theme="dark"] #page-breaks .break-tab{background:#14243d;color:#eef5ff;border-color:#304563}
+html[data-theme="dark"] #page-breaks .break-tab.current{background:#1568d8;border-color:#1568d8;color:#fff}
+html[data-theme="dark"] #page-breaks .break-filters input,
+html[data-theme="dark"] #page-breaks .break-mapping-form select{background:#122036;color:#f3f7ff;border-color:#38506b}
+html[data-theme="dark"] #page-breaks .break-tag-generated input{background:#172944;color:#fff;border-color:#4c6080}
