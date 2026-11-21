@@ -1,0 +1,88 @@
+/* Helen & Sons HRIS — standalone companion pages: consistent navy/white and black/white.
+   Loaded after premium-standalone.css. App logic and credentials are unchanged.
+*/
+html[data-theme="light"]{
+  color-scheme:light;
+  --st-ink:#182147;--st-muted:#384265;--st-canvas:#ffffff;--st-panel:#ffffff;
+  --st-accent:#182147;--st-accent-text:#ffffff;--st-soft:#f3f4f8;
+  --st-line:rgba(24,33,71,.24);--st-shadow:0 5px 22px rgba(24,33,71,.08);
+}
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --st-ink:#ffffff;--st-muted:#e2e2e2;--st-canvas:#000000;--st-panel:#000000;
+  --st-accent:#ffffff;--st-accent-text:#000000;--st-soft:#111111;
+  --st-line:rgba(255,255,255,.48);--st-shadow:none;
+}
+html[data-theme] body.premium-standalone{
+  background:var(--st-canvas)!important;background-image:none!important;
+  color:var(--st-ink)!important;
+}
+html[data-theme] body.premium-standalone header,
+html[data-theme] body.premium-standalone .topbar{
+  background:var(--st-accent-text)!important;background-image:none!important;
+  border-bottom:1px solid var(--st-line)!important;color:var(--st-ink)!important;
+}
+/* In light mode headers use #182147, in dark mode black. */
+html[data-theme="light"] body.premium-standalone header,
+html[data-theme="light"] body.premium-standalone .topbar{background:#182147!important;color:#ffffff!important}
+html[data-theme="dark"] body.premium-standalone header,
+html[data-theme="dark"] body.premium-standalone .topbar{background:#000000!important;color:#ffffff!important}
+html[data-theme] body.premium-standalone header :is(h1,strong,span,p,a),
+html[data-theme] body.premium-standalone header .eyebrow,
+html[data-theme] body.premium-standalone .topbar :is(strong,small,span,a){color:#ffffff!important}
+html[data-theme] body.premium-standalone .hero,
+html[data-theme] body.premium-standalone .hero :is(h1,p,.eyebrow),
+html[data-theme] body.premium-standalone .main>section.hero h1{
+  color:var(--st-ink)!important;background:transparent!important;
+}
+html[data-theme] body.premium-standalone :is(.panel,.metric,.stats article){
+  color:var(--st-ink)!important;background:var(--st-panel)!important;
+  background-image:none!important;border:1px solid var(--st-line)!important;
+  box-shadow:var(--st-shadow)!important;
+}
+html[data-theme] body.premium-standalone :is(.panel,.metric,.stats article) :is(h1,h2,h3,h4,strong,label,span){
+  color:var(--st-ink)!important;
+}
+html[data-theme] body.premium-standalone :is(.panel p,.intro p,.subtle,.note-bottom,.muted,.message,.metric span,.stats article span){
+  color:var(--st-muted)!important;opacity:1!important;
+}
+html[data-theme] body.premium-standalone :is(input,select,textarea){
+  background:var(--st-panel)!important;color:var(--st-ink)!important;
+  border:1px solid var(--st-line)!important;
+}
+html[data-theme] body.premium-standalone :is(input,textarea)::placeholder{
+  color:var(--st-muted)!important;opacity:1!important;
+}
+html[data-theme] body.premium-standalone :is(button:not(.secondary),.button:not(.secondary),.link-button){
+  background:var(--st-accent)!important;background-image:none!important;
+  color:var(--st-accent-text)!important;border:1px solid var(--st-line)!important;
+  box-shadow:none!important;
+}
+html[data-theme] body.premium-standalone :is(button.secondary,.button.secondary,.back){
+  background:var(--st-panel)!important;color:var(--st-ink)!important;
+  border:1px solid var(--st-line)!important;
+}
+html[data-theme] body.premium-standalone :is(.pill,.status,.status.review,.notice),
+html[data-theme] body.premium-standalone #message,
+html[data-theme] body.premium-standalone #message:is(.error,.ok){
+  background:var(--st-soft)!important;color:var(--st-ink)!important;
+  border:1px solid var(--st-line)!important;
+}
+html[data-theme] body.premium-standalone th{
+  background:var(--st-soft)!important;color:var(--st-ink)!important;
+  border-color:var(--st-line)!important;
+}
+html[data-theme] body.premium-standalone td{
+  color:var(--st-ink)!important;border-color:var(--st-line)!important;
+}
+html[data-theme] body.premium-standalone tbody tr:hover{background:var(--st-soft)!important}
+html[data-theme] body.premium-standalone main a:not(.link-button):not(.button){
+  color:var(--st-ink)!important;text-decoration:underline!important;
+}
+html[data-theme] body.premium-standalone .foot,
+html[data-theme] body.premium-standalone .foot a{
+  color:var(--st-ink)!important;
+}
+html[data-theme] body.premium-standalone :is(input,button,a,select,textarea):focus-visible{
+  outline:2px solid var(--st-ink)!important;outline-offset:2px!important;
+}
