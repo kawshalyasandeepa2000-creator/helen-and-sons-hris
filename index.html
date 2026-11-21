@@ -408,7 +408,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   const $ = id => document.getElementById(id);
   const html = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const DAY = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dubai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-  const state = {client:null,user:null,profile:null,people:[],staff:[],scans:[],daily:[],web:[],leaves:[],corrections:[],assets:[],historyData:null,historyFetchedAt:0,historyLoading:false,historyError:null,coverage7:null,coverageFetchedAt:0,coverageLoading:false,coverageError:null,teamData:null,teamLoading:false,teamError:null,teamFetchedAt:0,teamDate:DAY(),page:'overview',date:DAY(),busy:false,loaded:false};
+  const state = {client:null,user:null,profile:null,people:[],staff:[],scans:[],daily:[],web:[],leaves:[],corrections:[],assets:[],myScannerLinks:[],historyData:null,historyFetchedAt:0,historyLoading:false,historyError:null,coverage7:null,coverageFetchedAt:0,coverageLoading:false,coverageError:null,teamData:null,teamLoading:false,teamError:null,teamFetchedAt:0,teamDate:DAY(),page:'overview',date:DAY(),busy:false,loaded:false};
   let bulkRows = [];
   let bulkReviewed = false;
   let historyCandidateRows = [];
@@ -499,7 +499,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   }
   function switchPage(page){
     if(!state.profile)return;
-    if((['scans','scanner-staff','reports'].includes(page)&&!team())||(page==='assets'&&!admin())||(page==='approvals'&&!manager()))page='overview';
+    if(page==='alerts'||(['scans','scanner-staff','reports'].includes(page)&&!team())||(page==='assets'&&!admin())||(page==='approvals'&&!manager()) )page='overview';
     const found=$('page-'+page);if(!found)return;
     state.page=page;
     document.querySelectorAll('section.page').forEach(p=>p.classList.toggle('hidden',p.id!=='page-'+page));
@@ -524,13 +524,15 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
       safely(c.from('attendance_corrections').select('id,employee_id,work_date,proposed_in,proposed_out,reason,status,review_note,submitted_at').order('submitted_at',{ascending:false}).limit(300),'time corrections')
     ];
     if(admin())requests.push(safely(c.from('company_assets').select('id,asset_tag,category,asset_name,identifier,brand,model,status,assigned_to,notes').order('created_at',{ascending:false}).limit(250),'company assets'));
+    requests.push(safely(c.from('scanner_employee_links').select('device_key,scanner_user_id,employee_id').eq('employee_id',state.user.id),'my scanner links'));
     const data=await Promise.all(requests);
     [state.people,state.staff,state.scans,state.daily,state.web,state.leaves,state.corrections]=data;
     state.assets=admin()?data[7]:[];
+    state.myScannerLinks=data[admin()?8:7]||[];
     if(!state.people.some(p=>p.id===state.profile.id))state.people.push(state.profile);
     state.loaded=true;
     renderCurrent();
-    if(manager()){void loadDashboardHistory();void loadTeamDashboard();void loadSevenDayCoverage();}
+    if(manager()){void loadTeamDashboard();} // Hidden full-history widgets no longer poll on every refresh.
   }
 
   /* DAILY TEAM FINGERPRINT SUMMARY (ADMIN + HR): no payroll approval, no login linking. */
@@ -887,11 +889,60 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   function renderAssets(){
     $('live-assets-body').innerHTML=state.assets.length?state.assets.map(a=>`<tr><td><strong>${html(a.asset_name)}</strong><small class="td-note">${html(a.category)} · ${html(a.brand||'')}</small></td><td>${html(a.asset_tag)}</td><td>${html(a.identifier)}</td><td>${statusChip(a.status)}</td><td>${html(a.assigned_to?nameFor(a.assigned_to):'—')}</td><td><button type="button" class="table-action" data-edit-asset="${html(a.id)}">Edit</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty-row">No assets registered yet.</td></tr>';
   }
+
+  /* Personal attendance is the employee's RLS-limited read-only scanner preview.
+     1 scan is NOT a confirmed OUT; 2+ are candidates for HR review. */
+  function installPersonalFingerprintPanel(){
+    const anchor=document.querySelector('#page-attendance .page-heading');
+    if(!anchor||$('my-fingerprint-panel'))return;
+    anchor.insertAdjacentHTML('afterend',
+      '<section class="panel padded-panel" id="my-fingerprint-panel" style="margin-bottom:16px" aria-label="My personal fingerprint attendance">'+
+      '<div class="panel-title-row"><div><h2>My Fingerprint Attendance</h2>'+
+      '<p>Last 30 UAE days · My verified device scans only · All IN/OUT values are HR review candidates</p></div></div>'+
+      '<p id="my-fingerprint-link-status" class="section-helper" aria-live="polite">Checking scanner identity…</p>'+
+      '<div id="my-fingerprint-summary" class="h7-stats" style="margin:12px 0" aria-label="My attendance summary"></div>'+
+      '<div class="table-scroll"><table><thead><tr><th>DATE (GST)</th><th>FIRST SCAN · IN?</th><th>LAST SCAN · OUT?</th><th>SCANS</th><th>HR REVIEW</th></tr></thead>'+
+      '<tbody id="my-fingerprint-body"><tr><td colspan="5">Loading personal fingerprint records…</td></tr></tbody></table></div>'+
+      '<p class="section-helper" style="margin-top:12px">A fingerprint scan does not automatically establish payable hours, absence, late arrival or overtime. Ask HR to review missing or multiple punches.</p>'+
+      '</section>');
+  }
+  function renderMyFingerprintPanel(){
+    const panel=$('my-fingerprint-panel');
+    if(!panel||!state.profile)return;
+    const links=state.myScannerLinks||[];
+    const ids=new Set(links.map(x=>String(x.device_key)+'|'+String(x.scanner_user_id)));
+    const start=new Date(Date.parse(DAY()+'T00:00:00Z')-29*86400000).toISOString().slice(0,10);
+    const rows=state.daily.filter(r=>r.work_date>=start&&ids.has(String(r.device_key)+'|'+String(r.scanner_user_id)))
+       .sort((a,b)=>String(b.work_date).localeCompare(String(a.work_date)));
+    const one=rows.filter(r=>Number(r.punch_count)===1).length;
+    const review=rows.filter(r=>Number(r.punch_count)>2||r.preview_status==='review_mapping').length;
+    const status=$('my-fingerprint-link-status');
+    if(status) status.textContent=links.length
+       ? 'Verified login links: '+links.map(x=>String(x.scanner_user_id)).join(', ')+' · Device records are read-only.'
+       : 'No fingerprint scanner ID is linked to this login. Ask HR/Admin to verify your device identity; no mapping is made automatically.';
+    const summary=$('my-fingerprint-summary');
+    if(summary)summary.innerHTML=
+       '<div class="h7-stat"><strong>'+rows.length+'</strong><small>Days with scans (30 days)</small></div>'+
+       '<div class="h7-stat"><strong>'+one+'</strong><small>Single-scan days · OUT unknown</small></div>'+
+       '<div class="h7-stat"><strong>'+review+'</strong><small>Days requiring extra review</small></div>';
+    const body=$('my-fingerprint-body');
+    if(!body)return;
+    body.innerHTML=!links.length
+      ? '<tr><td colspan="5" class="empty-row">Identity mapping pending HR approval. Your existing records are safe.</td></tr>'
+      : !rows.length
+      ? '<tr><td colspan="5" class="empty-row">No recorded fingerprint scans for this login in the last 30 UAE days.</td></tr>'
+      : rows.map(r=>'<tr><td>'+html(formatDay(r.work_date))+'</td>'+
+          '<td>'+html(gstTime(r.first_scan_local))+'</td>'+
+          '<td>'+html(gstTime(r.last_scan_local))+'</td>'+
+          '<td>'+Number(r.punch_count||0)+'</td>'+
+          '<td>'+statusChip(previewLabel(r.preview_status))+'</td></tr>').join('');
+  }
+
   function renderAccount(){
     const p=state.profile;$('live-account-name').textContent=p.full_name;$('live-account-email').textContent=p.email;$('live-account-role').textContent='Role: '+roleText(p.role);$('live-account-dept').textContent=`Department: ${p.department||'Not set'} · Position: ${p.job_title||'Not set'}`;
   }
   function updateClock(){const n=new Date();const t=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dubai',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(n);$('live-clock').textContent=t;$('clock-date').textContent='GST · UTC+4';}
-  function renderCurrent(){if(!state.profile)return;renderOverview();renderBothTeamDashboards();renderTables();renderStaff();renderPeople();renderRequests();renderAssets();renderAccount();updateClock();}
+  function renderCurrent(){if(!state.profile)return;renderOverview();renderBothTeamDashboards();renderTables();renderMyFingerprintPanel();renderStaff();renderPeople();renderRequests();renderAssets();renderAccount();updateClock();}
   const field=(id)=>$(id)?.value?.trim()||'';
   function openModal(title,body){$('live-modal-title').textContent=title;$('live-modal-content').innerHTML=body;$('live-modal').classList.remove('hidden');$('live-modal').setAttribute('aria-hidden','false');$('live-modal-content').querySelector('input,select,button')?.focus();}
   function closeModal(){$('live-modal')?.classList.add('hidden');$('live-modal')?.setAttribute('aria-hidden','true');$('live-modal-content').innerHTML='';}
@@ -1162,6 +1213,8 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   }
   async function init(){
     buildPages();
+    installPersonalFingerprintPanel();
+    document.querySelector('#sidebar-nav [data-page="alerts"]')?.remove();
     // Removed seven-day historical all-employee widget from Overview and Attendance.
     // Removed duplicate all-staff live team widget from Overview and Attendance.
     const modal=document.createElement('div');modal.id='live-modal';modal.className='modal-backdrop hidden';modal.setAttribute('aria-hidden','true');modal.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="live-modal-title"><div class="modal-top"><h2 id="live-modal-title">Employee action</h2><button class="modal-close" id="live-modal-close" type="button" aria-label="Close dialog">×</button></div><div id="live-modal-content"></div></div>';document.body.appendChild(modal);
