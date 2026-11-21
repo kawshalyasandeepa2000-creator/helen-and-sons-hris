@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="light dark">
   <title>Daily Attendance Preview | Helen and Sons HRIS</title>
   <style>
     :root { --navy: #14233e; --ink:#1f2f43; --muted:#607287; --brand:#267e73; --bg:#f5f7fa; --border:#dce4eb; --good:#15754b; --amber:#98630f; --bad:#ac3340; }
@@ -53,6 +53,12 @@
     @media (max-width:620px) { .metrics { grid-template-columns:1fr; } .panel{padding:18px;} input{width:100%;} .auth-grid label{width:100%;} .form-row label{width:100%;} }
   </style>
 <link rel="stylesheet" href="css/premium-standalone.css?v=1">
+<script>
+  try { document.documentElement.dataset.theme =
+    localStorage.getItem('helen-sons-hris-studio-theme') === 'dark' ? 'dark' : 'light'; }
+  catch (_) { document.documentElement.dataset.theme = 'light'; }
+</script>
+<link rel="stylesheet" href="css/hris-two-tone-standalone.css?v=1">
 </head>
 <body class="premium-standalone" data-premium-page="daily">
   <header>
