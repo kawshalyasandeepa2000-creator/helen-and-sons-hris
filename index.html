@@ -449,8 +449,8 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   function buildPages(){
     const sections={
       attendance:`<div class="page-heading"><div><span class="eyebrow">REAL FINGERPRINT ATTENDANCE</span><h1>Attendance</h1><p>Verified ZKTeco scans, shown as provisional first / last scans. HR must review before payroll.</p></div><button class="btn btn-outline" data-refresh="">↻ Refresh</button></div>
-        <div class="panel padded-panel"><div class="panel-title-row"><div><h2>Daily fingerprint summary</h2><p>First scan and last scan in Gulf Standard Time. 1 scan = no confirmed OUT. 3+ scans = review required.</p></div><div class="filters"><label for="live-date">Date</label><input id="live-date" type="date" value="${DAY()}"></div></div>
-        <div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>DATE</th><th>FIRST SCAN</th><th>LAST SCAN</th><th>SCANS</th><th>REVIEW</th></tr></thead><tbody id="live-daily-body"></tbody></table></div></div>
+        <div class="panel padded-panel"><div class="panel-title-row"><div><h2>Daily fingerprint summary</h2><p>Original device times are preserved below HR-approved corrections. All times Gulf Standard Time; scans alone do not establish payroll.</p></div><div class="filters"><label for="live-date">Date</label><input id="live-date" type="date" value="${DAY()}"></div></div>
+        <div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>DATE</th><th>IN (DEVICE / HR)</th><th>OUT (DEVICE / HR)</th><th>RAW SCANS</th><th>REVIEW</th></tr></thead><tbody id="live-daily-body"></tbody></table></div></div>
         <div class="panel padded-panel" style="margin-top:16px"><div class="panel-title-row"><div><h2>Recorded web IN/OUT</h2><p>Manual punches from HRIS are recorded separately from raw fingerprint scans.</p></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>DATE</th><th>IN</th><th>OUT</th><th>SOURCE</th></tr></thead><tbody id="live-web-body"></tbody></table></div></div>`,
       scans:`<div class="page-heading"><div><span class="eyebrow">ZKTECO DEVICE</span><h1>Fingerprint scans</h1><p>Verified raw device events from the office PC connector — no fingerprint images.</p></div><button class="btn btn-outline" data-refresh="">↻ Refresh</button></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Recent verified scans</h2><p id="live-scans-count">Loaded scanner events</p></div></div><div class="table-scroll"><table><thead><tr><th>EMPLOYEE</th><th>SCANNER ID</th><th>DATE · GST</th><th>TIME · GST</th></tr></thead><tbody id="live-scan-body"></tbody></table></div></div>`,
       'scanner-staff':`<div class="page-heading"><div><span class="eyebrow">SCANNER IDENTITIES</span><h1>Scanner staff</h1><p>Device IDs are not login accounts. Verify real identity before linking an account to a fingerprint ID.</p></div></div><div class="panel data-panel"><div class="panel-title-row"><div><h2>Staff on fingerprint device</h2><p id="live-staff-sub">Staff directory</p></div><input class="search-input" id="live-staff-search" type="search" placeholder="Search scanner staff"></div><div class="table-scroll"><table><thead><tr><th>SCANNER ID</th><th>NAME ON DEVICE</th><th>STATUS</th><th>LINKED ACCOUNT</th><th>ADMIN ACTION</th></tr></thead><tbody id="live-staff-body"></tbody></table></div></div>`,
@@ -524,7 +524,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
       safely(c.from('daily_attendance_preview').select('device_key,scanner_user_id,employee_name,work_date,first_scan_local,last_scan_local,punch_count,preview_status,elapsed_minutes').order('work_date',{ascending:false}).limit(750),'daily attendance preview'),
       safely(c.from('attendance').select('id,employee_id,work_date,clock_in_at,clock_out_at,source').order('work_date',{ascending:false}).limit(300),'web attendance'),
       safely(c.from('leave_requests').select('id,employee_id,leave_type,start_date,end_date,reason,status,review_note,submitted_at').order('submitted_at',{ascending:false}).limit(300),'leaves'),
-      safely(c.from('attendance_corrections').select('id,employee_id,work_date,proposed_in,proposed_out,reason,status,review_note,submitted_at').order('submitted_at',{ascending:false}).limit(300),'time corrections')
+      safely(c.from('attendance_corrections').select('id,employee_id,work_date,proposed_in,proposed_out,reason,status,review_note,submitted_at,reviewed_at').order('submitted_at',{ascending:false}).limit(300),'time corrections')
     ];
     if(admin())requests.push(safely(c.from('company_assets').select('id,asset_tag,category,asset_name,identifier,brand,model,status,assigned_to,notes').order('created_at',{ascending:false}).limit(250),'company assets'));
     requests.push(safely(c.from('scanner_employee_links').select('device_key,scanner_user_id,employee_id').eq('employee_id',state.user.id),'my scanner links'));
@@ -849,10 +849,37 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     const heading=$('page-overview').querySelector('.attendance-hero-top h2');if(heading)heading.textContent='Field staff · Web Clock IN / OUT';
     const subtitle=$('page-overview').querySelector('.attendance-hero-top p');if(subtitle)subtitle.textContent='Your manually recorded attendance · Gulf Standard Time (GST)';
   }
+
+  /* HR-approved corrections affect only the display. Raw scanner events stay immutable.
+     An approved device-to-login identity link is mandatory. */
+  function approvedCorrectionForScanRow(r){
+    const mapped=state.staff.find(s=>s.device_key===r.device_key
+       &&String(s.scanner_user_id)===String(r.scanner_user_id)
+       &&s.review_status==='verified'&&s.auth_profile_id);
+    const selfLink=state.myScannerLinks.find(l=>l.device_key===r.device_key
+       &&String(l.scanner_user_id)===String(r.scanner_user_id));
+    const owner=mapped?.auth_profile_id||selfLink?.employee_id;
+    if(!owner)return null;
+    const approved=state.corrections.filter(c=>c.employee_id===owner&&c.work_date===r.work_date
+       &&c.status==='approved'&&c.reviewed_at);
+    approved.sort((a,b)=>Date.parse(b.reviewed_at)-Date.parse(a.reviewed_at)
+       ||Date.parse(b.submitted_at)-Date.parse(a.submitted_at));
+    return approved[0]||null;
+  }
+  function scanTimeDisplay(raw,correction,field){
+    if(!correction)return html(gstTime(raw));
+    return '<strong>'+html(gstTime(correction[field]))+'</strong>'+
+       '<small class="td-note">HR approved · original: '+html(gstTime(raw))+'</small>';
+  }
+  function scanStatusDisplay(r,correction){
+    if(!correction)return statusChip(previewLabel(r.preview_status));
+    return statusChip(correction.proposed_out?'HR-approved IN / OUT':'HR-approved IN · OUT not approved')+
+      '<small class="td-note">Raw device: '+html(previewLabel(r.preview_status))+'</small>';
+  }
   function renderTables(){
     const date=$('live-date')?.value||DAY();
     const daily=state.daily.filter(r=>r.work_date===date);
-    $('live-daily-body').innerHTML=daily.length?daily.map(r=>`<tr><td><strong>${html(r.employee_name)}</strong><small class="td-note">ID ${html(r.scanner_user_id)}</small></td><td>${html(formatDay(r.work_date))}</td><td>${html(gstTime(r.first_scan_local))}</td><td>${html(gstTime(r.last_scan_local))}</td><td>${r.punch_count}</td><td>${statusChip(previewLabel(r.preview_status))}</td></tr>`).join(''):'<tr><td colspan="6" class="empty-row">No scanner events for this date.</td></tr>';
+    $('live-daily-body').innerHTML=daily.length?daily.map(r=>{const approved=approvedCorrectionForScanRow(r);return `<tr><td><strong>${html(r.employee_name)}</strong><small class="td-note">ID ${html(r.scanner_user_id)}</small></td><td>${html(formatDay(r.work_date))}</td><td>${scanTimeDisplay(r.first_scan_local,approved,'proposed_in')}</td><td>${scanTimeDisplay(r.last_scan_local,approved,'proposed_out')}</td><td>${Number(r.punch_count)||0}</td><td>${scanStatusDisplay(r,approved)}</td></tr>`;}).join(''):'<tr><td colspan="6" class="empty-row">No scanner events for this date.</td></tr>';
     const web=state.web.filter(r=>r.work_date===date);
     $('live-web-body').innerHTML=web.length?web.map(r=>`<tr><td>${html(nameFor(r.employee_id))}</td><td>${html(r.work_date)}</td><td>${html(isoGSTTime(r.clock_in_at))}</td><td>${html(isoGSTTime(r.clock_out_at))}</td><td>Web punch</td></tr>`).join(''):'<tr><td colspan="5" class="empty-row">No manual web IN/OUT records for this date.</td></tr>';
     $('live-scans-count').textContent=state.scans.length+' recent verified scans loaded';
@@ -901,10 +928,10 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     anchor.insertAdjacentHTML('afterend',
       '<section class="panel padded-panel" id="my-fingerprint-panel" style="margin-bottom:16px" aria-label="My personal fingerprint attendance">'+
       '<div class="panel-title-row"><div><h2>My Fingerprint Attendance</h2>'+
-      '<p>Last 30 UAE days · My verified device scans only · All IN/OUT values are HR review candidates</p></div></div>'+
+      '<p>Last 30 UAE days · My linked scans and approved HR corrections · Original device times are preserved</p></div></div>'+
       '<p id="my-fingerprint-link-status" class="section-helper" aria-live="polite">Checking scanner identity…</p>'+
       '<div id="my-fingerprint-summary" class="h7-stats" style="margin:12px 0" aria-label="My attendance summary"></div>'+
-      '<div class="table-scroll"><table><thead><tr><th>DATE (GST)</th><th>FIRST SCAN · IN?</th><th>LAST SCAN · OUT?</th><th>SCANS</th><th>HR REVIEW</th></tr></thead>'+
+      '<div class="table-scroll"><table><thead><tr><th>DATE (GST)</th><th>IN (DEVICE / HR)</th><th>OUT (DEVICE / HR)</th><th>RAW SCANS</th><th>HR REVIEW</th></tr></thead>'+
       '<tbody id="my-fingerprint-body"><tr><td colspan="5">Loading personal fingerprint records…</td></tr></tbody></table></div>'+
       '<p class="section-helper" style="margin-top:12px">A fingerprint scan does not automatically establish payable hours, absence, late arrival or overtime. Ask HR to review missing or multiple punches.</p>'+
       '</section>');
@@ -917,8 +944,8 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     const start=new Date(Date.parse(DAY()+'T00:00:00Z')-29*86400000).toISOString().slice(0,10);
     const rows=state.daily.filter(r=>r.work_date>=start&&ids.has(String(r.device_key)+'|'+String(r.scanner_user_id)))
        .sort((a,b)=>String(b.work_date).localeCompare(String(a.work_date)));
-    const one=rows.filter(r=>Number(r.punch_count)===1).length;
-    const review=rows.filter(r=>Number(r.punch_count)>2||r.preview_status==='review_mapping').length;
+    const one=rows.filter(r=>Number(r.punch_count)===1&&!approvedCorrectionForScanRow(r)?.proposed_out).length;
+    const review=rows.filter(r=>!approvedCorrectionForScanRow(r)&&(Number(r.punch_count)>2||r.preview_status==='review_mapping')).length;
     const status=$('my-fingerprint-link-status');
     if(status) status.textContent=links.length
        ? 'Verified login links: '+links.map(x=>String(x.scanner_user_id)).join(', ')+' · Device records are read-only.'
@@ -934,11 +961,11 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
       ? '<tr><td colspan="5" class="empty-row">Identity mapping pending HR approval. Your existing records are safe.</td></tr>'
       : !rows.length
       ? '<tr><td colspan="5" class="empty-row">No recorded fingerprint scans for this login in the last 30 UAE days.</td></tr>'
-      : rows.map(r=>'<tr><td>'+html(formatDay(r.work_date))+'</td>'+
-          '<td>'+html(gstTime(r.first_scan_local))+'</td>'+
-          '<td>'+html(gstTime(r.last_scan_local))+'</td>'+
+      : rows.map(r=>{const approved=approvedCorrectionForScanRow(r);return '<tr><td>'+html(formatDay(r.work_date))+'</td>'+
+          '<td>'+scanTimeDisplay(r.first_scan_local,approved,'proposed_in')+'</td>'+
+          '<td>'+scanTimeDisplay(r.last_scan_local,approved,'proposed_out')+'</td>'+
           '<td>'+Number(r.punch_count||0)+'</td>'+
-          '<td>'+statusChip(previewLabel(r.preview_status))+'</td></tr>').join('');
+          '<td>'+scanStatusDisplay(r,approved)+'</td></tr>';}).join('');
   }
 
   function renderAccount(){
