@@ -46,7 +46,8 @@
     page.id='page-hr-core';page.className='page hidden';
     page.innerHTML='<div class="page-heading"><div><span class="eyebrow">HR-ONLY CONFIGURATION</span>'+
       '<h1>HR Operations Setup</h1><p>Verified employee records, shift plans, leave allocations and document expiry dates.</p></div>'+
-      '<button class="btn btn-outline" type="button" id="hrc-reload">Refresh</button></div>'+
+      '<div><button class="btn btn-outline" type="button" id="hrc-reload">Refresh</button> ' +
+      '<button class="btn btn-outline" type="button" id="hrc-export">Export expiry CSV</button></div></div>'+
       '<div id="hrc-content"><p class="section-helper">Open this page to load HR data.</p></div>';
     wrap.appendChild(page);
     var style=document.createElement('style');style.id='hrc-style';
@@ -68,9 +69,14 @@
       '.hrc-table-label{font-size:12px;font-weight:600;margin:15px 0 7px}'+
       '.hrc-alert{border-left:3px solid #b87323;padding:10px 12px;font-size:12px;background:rgba(184,115,35,.08);border-radius:6px}'+
       '.hrc-error{color:#b42318}.hrc-urgent{font-weight:700;color:#b42318}.hrc-soon{font-weight:650;color:#916000}';
-    document.head.appendChild(style);
+    if(!$('hrc-style'))document.head.appendChild(style);
     document.addEventListener('click',function(e){
       if(e.target.closest('#hrc-reload')&&manager())load();
+      if(e.target.closest('#hrc-export')&&manager()&&data)exportExpiryCsv();
+    });
+    document.addEventListener('change',function(e){
+      var el=e.target,form=el&&el.closest('.hrc-form');
+      if(form&&data&&['employee_code','document_type','leave_year'].includes(el.name))fillExisting(form);
     });
     document.addEventListener('submit',function(e){
       var form=e.target.closest('.hrc-form');
@@ -79,6 +85,51 @@
     });
     built=true;
   }
+
+  function setField(form,name,value){
+    var field=form.elements.namedItem(name);
+    if(field)field.value=value==null?'':String(value);
+  }
+  function fillExisting(form){
+    var kind=form.getAttribute('data-form'),code=form.elements.namedItem('employee_code')?.value;
+    if(!code)return;
+    if(kind==='details'){
+      var d=data.details.find(function(r){return r.employee_code===code;});
+      ['joining_date','employment_type','reporting_manager','work_location'].forEach(function(k){
+        setField(form,k,d?d[k]:null);
+      });
+    }else if(kind==='leave'){
+      var yr=Number(form.elements.namedItem('leave_year')?.value);
+      var l=data.leave.find(function(r){return r.employee_code===code&&r.leave_year===yr;});
+      setField(form,'annual_days',l?l.annual_days:null);
+      setField(form,'carry_forward_days',l?l.carry_forward_days:null);
+    }else if(kind==='document'){
+      var doc=form.elements.namedItem('document_type')?.value;
+      var d=data.docs.find(function(r){return r.employee_code===code&&r.document_type===doc;});
+      setField(form,'expires_on',d?d.expires_on:null);
+    }
+  }
+  function exportExpiryCsv(){
+    if(!manager()||!data)return;
+    var rows=[['EMP_CODE','EMPLOYEE','DOCUMENT_TYPE','EXPIRES_ON','STATUS']];
+    var today=dayGST();
+    data.docs.forEach(function(d){
+      var diff=dateDiff(d.expires_on,today);
+      rows.push([d.employee_code,empName(d.employee_code),d.document_type,d.expires_on,
+        diff<0?'Expired':diff<=30?'Due within 30 days':diff<=90?'Due within 90 days':'Valid']);
+    });
+    var safeCell=function(v){
+      var str=String(v==null?'':v);
+      if(/^\s*[=+\-@]/.test(str))str="'"+str;
+      return '"'+str.replace(/"/g,'""')+'"';
+    };
+    var csv='\uFEFF'+rows.map(function(r){return r.map(safeCell).join(',');}).join('\r\n');
+    var url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+    var a=document.createElement('a');a.href=url;a.download='Helen_Sons_HR_Document_Expiry_'+today+'.csv';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},1500);
+  }
+
   function table(headers,rows,empty){
     return '<div class="hrc-tbl"><table><thead><tr>'+
       headers.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+
@@ -270,6 +321,7 @@
       return;
     }
     install();
+    $('hrc-nav')?.classList.remove('hidden');
     if(ctx&&document.querySelector('#page-hr-core:not(.hidden)'))void load();
   }
   function onPageChange(page){
@@ -279,6 +331,7 @@
     ctx=null;data=null;fetching=false;saving=false;
     var area=$('hrc-content');
     if(area)area.textContent='Sign in as HR or Administrator to access HR Operations Setup.';
+    $('hrc-nav')?.classList.add('hidden');
   }
   window.HRIS_HR_CORE={onLogin:onLogin,onLogout:onLogout,onPageChange:onPageChange};
 })();
