@@ -312,3 +312,26 @@ html[data-theme] .toast.show{
  html[data-theme] #page-hr-core .hrc-grid{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
  html[data-theme] .page-heading{flex-wrap:wrap}
 }
+
+/* Overview Refresh: do not let the old "white text" override disappear on white. */
+html[data-theme="light"] #page-overview .page-heading button.reload-btn{
+  background:#182147!important;background-image:none!important;
+  color:#ffffff!important;border:1px solid #182147!important;
+  font-weight:800!important;text-shadow:none!important;
+  min-width:130px!important;min-height:43px!important;
+}
+html[data-theme="dark"] #page-overview .page-heading button.reload-btn{
+  background:#ffffff!important;background-image:none!important;
+  color:#000000!important;border:1px solid #ffffff!important;
+  font-weight:800!important;text-shadow:none!important;
+  min-width:130px!important;min-height:43px!important;
+}
+html[data-theme] #page-overview .page-heading button.reload-btn :is(span,svg){
+  color:inherit!important;stroke:currentColor!important;
+}
+html[data-theme] #page-overview .page-heading button.reload-btn:hover{
+  opacity:.88!important;filter:none!important;
+}
+html[data-theme] #page-overview .page-heading button.reload-btn:focus-visible{
+  outline:3px solid var(--hs-ink)!important;outline-offset:4px!important;
+}
