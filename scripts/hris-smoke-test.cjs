@@ -27,6 +27,18 @@ check('Approved HR corrections overlay device scans with clear audit labels', ()
   assert(html.includes("HR approved · original:"));
   assert(html.includes("approvedCorrectionForScanRow(r)"));
 });
+check('10-second automatic refresh is safe and preserves page state', () => {
+  assert(html.includes("},10000);"));
+  assert(html.includes("if(inFlightDataRefresh)return inFlightDataRefresh;"));
+  assert(html.includes("if(!state.profile||state.busy||document.hidden||inFlightDataRefresh)return;"));
+  assert(html.includes("const requestedBy=state.user?.id;"));
+  assert(html.includes("if(!state.profile||state.user?.id!==requestedBy)return;"));
+  assert(html.includes('js/break-management.js?v=2'));
+  const breaks = text('js/break-management.js');
+  assert(breaks.includes("},10000);"), 'Break notifications must poll every 10 seconds');
+  assert(breaks.includes("Date.now()-(mine?mine._readAt:0)>=10000"));
+  assert(breaks.includes("Date.now()-(hrData?hrData._readAt:0)>=10000"));
+});
 check('Duplicate seven-day/all-staff cards remain unmounted', () => {
   assert(!/^\s*attachHistoryDashboardPanels\(\);/m.test(html));
   assert(!/^\s*attachTeamPanels\(\);/m.test(html));
