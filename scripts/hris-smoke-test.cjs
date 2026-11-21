@@ -20,6 +20,13 @@ check('Employee scanner self-service is mounted', () => {
   assert(html.includes('installPersonalFingerprintPanel();'));
   assert(html.includes("scanner_employee_links"));
 });
+check('Approved HR corrections overlay device scans with clear audit labels', () => {
+  assert(html.includes('function approvedCorrectionForScanRow(r)'));
+  assert(html.includes("c.status==='approved'&&c.reviewed_at"));
+  assert(html.includes("String(correction[field]).slice(0,5)"));
+  assert(html.includes("HR approved · original:"));
+  assert(html.includes("approvedCorrectionForScanRow(r)"));
+});
 check('Duplicate seven-day/all-staff cards remain unmounted', () => {
   assert(!/^\s*attachHistoryDashboardPanels\(\);/m.test(html));
   assert(!/^\s*attachTeamPanels\(\);/m.test(html));
