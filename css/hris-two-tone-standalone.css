@@ -86,3 +86,11 @@ html[data-theme] body.premium-standalone .foot a{
 html[data-theme] body.premium-standalone :is(input,button,a,select,textarea):focus-visible{
   outline:2px solid var(--st-ink)!important;outline-offset:2px!important;
 }
+
+/* The scanner monitor's "Back to HRIS" link sits inside the dark header. */
+html[data-theme="light"] body.premium-standalone header a.back{
+  background:#ffffff!important;color:#182147!important;border:1px solid #ffffff!important;
+}
+html[data-theme="dark"] body.premium-standalone header a.back{
+  background:#000000!important;color:#ffffff!important;border:1px solid #ffffff!important;
+}
