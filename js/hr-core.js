@@ -144,6 +144,7 @@
     var now=dayGST();
     var soon=data.docs.filter(function(d){var n=dateDiff(d.expires_on,now);return n>=0&&n<=30;}).length;
     var expired=data.docs.filter(function(d){return dateDiff(d.expires_on,now)<0;}).length;
+    var recentImport=data.lastScans[0]?.imported_at||null;
     var emp=selectEmp();
     var types=opt('','Employment type not configured')+
       ['full_time','part_time','temporary','contract','other'].map(function(v){return opt(v,v.replace('_',' '));}).join('');
@@ -161,7 +162,8 @@
     out.push('<div class="hrc-grid">'+row('HR roster employees',data.roster.length)+
       row('Profile details entered',data.details.length)+row('Active shift templates',data.shifts.filter(function(s){return s.active;}).length)+
       row('Documents expiring ≤30d',soon)+row('Documents already expired',expired)+
-      row('Leave allocations entered',data.leave.length)+'</div>');
+      row('Leave allocations entered',data.leave.length)+row('HR config audit entries',data.audits.length)+'</div>');
+    out.push('<p class="hrc-note">Latest fingerprint record imported: '+esc(recentImport?new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dubai',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(recentImport))+' GST':'No import timestamp available')+'. This is not proof the office connector is online; no scans may occur during quiet periods.</p>');
 
     var pRows=data.roster.map(function(r){
       var d=data.details.find(function(x){return x.employee_code===r.employee_code;});
@@ -233,6 +235,12 @@
     out.push(section('4. HR document expiry tracker','Dates only. No passport numbers, Emirates ID numbers, document images or files are uploaded.',
       table(['EMPLOYEE','DOCUMENT','EXPIRY DATE','STATUS'],docRows,'No verified document expiry dates have been entered.')+
       '<div class="hrc-table-label">Record or update an expiry date</div>'+docForm));
+    var auditRows=data.audits.map(function(a){
+      return cells([esc(a.table_name),esc(a.operation),esc(a.record_key),
+        esc(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dubai',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(a.changed_at)))]);
+    });
+    out.push(section('5. HR configuration audit','Records who changed HR setup data. Past entries cannot be edited by regular HRIS accounts.',
+      table(['MODULE','ACTION','RECORD','CHANGED AT (GST)'],auditRows,'No HR setup changes recorded yet.')));
     out.push('<p class="hrc-note">Access: active HR Managers and Administrators only (Supabase RLS). '+
       'This module does not calculate UAE statutory leave, late penalties, salaries or WPS files.</p>');
     $('hrc-content').innerHTML=out.join('');
@@ -242,14 +250,16 @@
     fetching=true;
     var area=$('hrc-content');
     if(area)area.innerHTML='<p class="section-helper">Loading HR data with Supabase access controls…</p>';
-    var names=['roster','details','shifts','assignments','leave','docs'];
+    var names=['roster','details','shifts','assignments','leave','docs','audits','lastScans'];
     var queries=[
       ctx.client.from('employee_bulk_roster').select('employee_code,full_name,department,job_title').order('employee_code'),
       ctx.client.from('hris_employee_details').select('employee_code,joining_date,employment_type,reporting_manager,work_location').order('employee_code'),
       ctx.client.from('hris_shift_templates').select('id,shift_name,start_time,end_time,work_days,grace_minutes,active').order('shift_name'),
       ctx.client.from('hris_employee_shift_assignments').select('employee_code,effective_from,shift_id').order('effective_from',{ascending:false}).limit(500),
       ctx.client.from('hris_leave_entitlements').select('employee_code,leave_year,annual_days,carry_forward_days').order('leave_year',{ascending:false}).limit(500),
-      ctx.client.from('hris_document_expiry').select('employee_code,document_type,expires_on').order('expires_on',{ascending:true})
+      ctx.client.from('hris_document_expiry').select('employee_code,document_type,expires_on').order('expires_on',{ascending:true}),
+      ctx.client.from('hris_hr_change_audit').select('table_name,operation,record_key,changed_at').order('changed_at',{ascending:false}).limit(50),
+      ctx.client.from('scanner_events').select('device_local_time,imported_at').order('imported_at',{ascending:false}).limit(1)
     ];
     var userId=ctx.user.id;
     try{
