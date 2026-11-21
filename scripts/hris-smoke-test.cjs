@@ -55,8 +55,8 @@ check('No service-role credentials or secret key names embedded in live browser 
 });
 check('Navy/white light and black/white dark themes are loaded last and readable', () => {
   const theme = text('css/hris-two-tone-theme.css');
-  assert(html.includes('css/hris-two-tone-theme.css?v=1'));
-  assert(html.indexOf('css/hris-two-tone-theme.css?v=1') > html.indexOf('id="classic-live-addons"'));
+  assert(html.includes('css/hris-two-tone-theme.css?v=2'));
+  assert(html.indexOf('css/hris-two-tone-theme.css?v=2') > html.indexOf('id="classic-live-addons"'));
   assert(theme.includes('html[data-theme="light"]'));
   assert(theme.includes('html[data-theme="dark"]'));
   assert(theme.includes('--hs-ink:#182147'));
@@ -69,6 +69,67 @@ check('Navy/white light and black/white dark themes are loaded last and readable
   for(const char of theme) {if(char==='{')braces++;if(char==='}')braces--;assert(braces>=0,'CSS unbalanced');}
   assert.equal(braces,0,'CSS braces unbalanced');
 });
+
+check('Verified attendance coverage charts render without deleted duplicate panels', () => {
+  assert(html.includes('function publishTeamCoverage()'));
+  assert(html.includes("new CustomEvent('hris:team-coverage'"));
+  assert(html.includes("void loadSevenDayCoverage();"));
+  assert(html.includes('function publishSevenDayCoverage()'));
+  assert(html.includes('js/premium-blue-ui.js?v=3'));
+  const js = text('js/premium-blue-ui.js');
+  assert(!js.includes("const historyPanel=$('h7-overview-panel')"));
+  assert(!js.includes("const roster=$('team-overview-staff')"));
+  assert(js.includes("document.addEventListener('hris:team-coverage'"));
+  const theme = text('css/hris-two-tone-theme.css');
+  assert(theme.includes('button.reload-btn'));
+  assert(theme.includes('background:#182147!important'));
+  assert(theme.includes('color:#000000!important'));
+
+  // Run the actual production chart JavaScript in a small fake DOM,
+  // with both zero-scan dates and authorized 17-person report fixtures.
+  const node = () => ({
+    textContent:'',children:[],
+    style:{setProperty(){}},
+    classList:{hidden:false,contains(name){return name==='hidden'&&this.hidden;},add(){},toggle(){}},
+    replaceChildren(...elements){this.children=elements;},
+    append(...elements){this.children.push(...elements);},
+    addEventListener(){},setAttribute(){},querySelectorAll(){return [];}
+  });
+  const ids = {};
+  for(const id of ['app-screen','premium-bar-chart','premium-bar-days','premium-bar-note',
+    'premium-donut','premium-covered','premium-coverage-note','premium-scanned-count',
+    'premium-no-record-count','premium-roster-count','premium-raw-scans','metric-in'])
+    ids[id]=node();
+  const events = {};
+  const doc = {
+    getElementById(id){return ids[id]||null;},
+    addEventListener(name,fn){(events[name]??=[]).push(fn);},
+    createElement(){return node();}
+  };
+  class Observer{observe(){}}
+  vm.runInNewContext(js,{document:doc,MutationObserver:Observer,
+    requestAnimationFrame:(fn)=>fn(),console:{warn(){},log(){}}},{timeout:2000});
+  const emit=(name,detail)=>(events[name]||[]).forEach(fn=>fn({detail}));
+  emit('DOMContentLoaded');
+  const days=[0,14,0,17,16,15,16].map((covered,i)=>({
+    date:'2026-11-'+String(i+14).padStart(2,'0'),covered
+  }));
+  emit('hris:coverage-7',{authorized:true,loading:false,error:null,days});
+  emit('hris:team-coverage',{authorized:true,loading:false,error:null,
+    date:'2026-11-21',employees:17,scanned:16,fetchedAt:Date.now()});
+  assert.equal(ids['premium-bar-chart'].children.length,7);
+  assert.equal(ids['premium-bar-chart'].children[0].children[0].textContent,'0');
+  assert.equal(ids['premium-covered'].textContent,'16/17');
+  assert.equal(ids['premium-scanned-count'].textContent,'16');
+  assert.equal(ids['premium-no-record-count'].textContent,'1');
+  assert.equal(ids['premium-roster-count'].textContent,'17');
+  ids['app-screen'].classList.hidden=true;
+  emit('hris:coverage-7',{authorized:false,days:[]});
+  emit('hris:team-coverage',{authorized:false,employees:null,scanned:null});
+  assert.equal(ids['premium-covered'].textContent,'—');
+  assert.equal(ids['premium-roster-count'].textContent,'—');
+});
+
 check('Standalone HRIS pages honor the same two-tone preference', () => {
   const companionCss = text('css/hris-two-tone-standalone.css');
   for (const filename of ['daily-attendance.html','fingerprint-live.html','reset-password.html']) {
