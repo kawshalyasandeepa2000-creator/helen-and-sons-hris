@@ -4,6 +4,12 @@
 <meta name="theme-color" content="#000040"><title>Helen &amp; Sons | Live Scanner Monitor</title>
 <link href="css/scanner-monitor.css" rel="stylesheet">
 <link rel="stylesheet" href="css/premium-standalone.css?v=1">
+<script>
+  try { document.documentElement.dataset.theme =
+    localStorage.getItem('helen-sons-hris-studio-theme') === 'dark' ? 'dark' : 'light'; }
+  catch (_) { document.documentElement.dataset.theme = 'light'; }
+</script>
+<link rel="stylesheet" href="css/hris-two-tone-standalone.css?v=1">
 </head><body class="premium-standalone" data-premium-page="scanner">
 <header class="topbar"><div class="brand"><img src="assets/helen-and-sons-logo.png" alt="Helen &amp; Sons logo"><span>HELEN &amp; SONS<small>HRIS · LIVE FINGERPRINT EVENTS</small></span></div><a class="back" href="index.html">← Back to HRIS</a></header>
 <main class="main">
