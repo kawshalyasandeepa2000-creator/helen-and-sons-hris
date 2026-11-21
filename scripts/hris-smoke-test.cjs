@@ -53,6 +53,22 @@ check('No service-role credentials or secret key names embedded in live browser 
     assert(!/SUPABASE_SERVICE_ROLE_KEY|sb_secret_[a-zA-Z0-9_-]+/i.test(text(filename)), filename);
   }
 });
+check('Navy/white light and black/white dark themes are loaded last and readable', () => {
+  const theme = text('css/hris-two-tone-theme.css');
+  assert(html.includes('css/hris-two-tone-theme.css?v=1'));
+  assert(html.indexOf('css/hris-two-tone-theme.css?v=1') > html.indexOf('id="classic-live-addons"'));
+  assert(theme.includes('html[data-theme="light"]'));
+  assert(theme.includes('html[data-theme="dark"]'));
+  assert(theme.includes('--hs-ink:#182147'));
+  assert(theme.includes('--hs-ink:#ffffff'));
+  assert(theme.includes('--hs-canvas:#000000'));
+  assert(theme.includes('#page-hr-core .hrc-stat'));
+  assert(theme.includes('#page-hr-core .hrc-panel'));
+  assert(theme.includes('color:var(--hs-ink)!important'));
+  let braces=0;
+  for(const char of theme) {if(char==='{')braces++;if(char==='}')braces--;assert(braces>=0,'CSS unbalanced');}
+  assert.equal(braces,0,'CSS braces unbalanced');
+});
 check('All local CSS and JS assets referenced from index.html exist', () => {
   const assets = [...html.matchAll(/<(?:script|link)\s+[^>]*(?:src|href)="([^"]+)"/gi)]
     .map(m => m[1].split('?')[0])
