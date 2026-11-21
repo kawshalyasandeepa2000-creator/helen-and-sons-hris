@@ -295,7 +295,7 @@
        if(tab==='hr')void loadHR().catch(()=>{});
      }).subscribe();
    void loadNotifications().catch(e=>console.warn('Break notification refresh',e?.message));
-   noteTimer=setInterval(()=>{if(ctx)void loadNotifications().catch(()=>{});},15000);
+   noteTimer=setInterval(()=>{if(ctx&&!document.hidden)void loadNotifications().catch(()=>{});},10000);
  }
  function onLogin(next){
    const switched=ctx?.user?.id!==next.user?.id;
@@ -315,8 +315,8 @@
          const remainingCard=$('break-mine-content')?.querySelector('.break-stat:nth-child(3) strong');if(remainingCard)remainingCard.textContent=duration(Math.max(0,totalLimit-now));
        }
        // Periodically refresh the server's record, including across devices.
-       if(Date.now()-(mine?mine._readAt:0)>30000)void loadMine();
-     } else if(tab==='hr'&&!isEditingHR()&&Date.now()-(hrData?hrData._readAt:0)>15000)void loadHR().catch(()=>{});
+       if(!document.hidden&&Date.now()-(mine?mine._readAt:0)>=10000)void loadMine();
+     } else if(tab==='hr'&&!document.hidden&&!isEditingHR()&&Date.now()-(hrData?hrData._readAt:0)>=10000)void loadHR().catch(()=>{});
    },5000);
    if(pendingToken){
      // Remove the secret tag from the address bar once the same-page authenticated app is open.
