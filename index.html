@@ -432,6 +432,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   const caps = (s='') => String(s).trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase() || 'HS';
   function showLogin(mode='login'){
     window.HRIS_BREAKS?.onLogout();
+    window.HRIS_HR_CORE?.onLogout();
     $('app-screen').classList.add('hidden');$('auth-screen').classList.remove('hidden');
     $('login-view').classList.toggle('hidden',mode!=='login');$('forgot-view').classList.toggle('hidden',mode!=='forgot');$('password-view').classList.add('hidden');
     $('setup-alert').classList.add('hidden');$('demo-entry').classList.add('hidden');
@@ -496,10 +497,11 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     showTeamDashboardVisibility();
     switchPage(state.page);
     window.HRIS_BREAKS?.onLogin({client:state.client,user:state.user,profile:state.profile});
+    window.HRIS_HR_CORE?.onLogin({client:state.client,user:state.user,profile:state.profile});
   }
   function switchPage(page){
     if(!state.profile)return;
-    if(page==='alerts'||(['scans','scanner-staff','reports'].includes(page)&&!team())||(page==='assets'&&!admin())||(page==='approvals'&&!manager()) )page='overview';
+    if(page==='alerts'||(['scans','scanner-staff','reports'].includes(page)&&!team())||(page==='assets'&&!admin())||(page==='approvals'&&!manager())||(page==='hr-core'&&!manager()) )page='overview';
     const found=$('page-'+page);if(!found)return;
     state.page=page;
     document.querySelectorAll('section.page').forEach(p=>p.classList.toggle('hidden',p.id!=='page-'+page));
@@ -509,6 +511,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     navMenu(false);
     renderCurrent();
     window.HRIS_BREAKS?.onPageChange(page);
+    window.HRIS_HR_CORE?.onPageChange(page);
   }
   async function safely(query, label){try{const {data,error}=await query;if(error)throw error;return data||[]}catch(err){console.warn('HRIS query unavailable:',label,err?.message);return [];}}
   async function loadData(){
@@ -1233,5 +1236,6 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
 </script>
 <script src="js/premium-blue-ui.js?v=2" defer></script>
 <script src="js/break-management.js?v=1" defer></script>
+<script src="js/hr-core.js?v=1" defer></script>
 </body>
 </html>
