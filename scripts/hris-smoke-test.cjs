@@ -69,6 +69,19 @@ check('Navy/white light and black/white dark themes are loaded last and readable
   for(const char of theme) {if(char==='{')braces++;if(char==='}')braces--;assert(braces>=0,'CSS unbalanced');}
   assert.equal(braces,0,'CSS braces unbalanced');
 });
+check('Standalone HRIS pages honor the same two-tone preference', () => {
+  const companionCss = text('css/hris-two-tone-standalone.css');
+  for (const filename of ['daily-attendance.html','fingerprint-live.html','reset-password.html']) {
+    const page = text(filename);
+    assert(page.includes('css/hris-two-tone-standalone.css?v=1'), filename);
+    assert(page.includes("helen-sons-hris-studio-theme"), filename);
+    assert(page.indexOf('css/hris-two-tone-standalone.css?v=1') < page.indexOf('</head>'), filename);
+  }
+  assert(companionCss.includes('background:#182147!important'));
+  assert(companionCss.includes('background:#000000!important'));
+  assert(companionCss.includes('--st-panel:#ffffff'));
+  assert(companionCss.includes('--st-panel:#000000'));
+});
 check('All local CSS and JS assets referenced from index.html exist', () => {
   const assets = [...html.matchAll(/<(?:script|link)\s+[^>]*(?:src|href)="([^"]+)"/gi)]
     .map(m => m[1].split('?')[0])
