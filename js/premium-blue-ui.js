@@ -46,78 +46,73 @@
     const d=new Date(day+'T12:00:00Z');
     return new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',timeZone:'UTC'}).format(d);
   }
-  const valueFrom=(id)=>Number.parseInt($(id)?.textContent?.trim()||'',10);
-  let sevenDayCoverage={days:[],loading:false,error:null};
+  /* Charts render directly from RLS-authorized server report summaries.
+     Removed duplicate employee-history/team panels are no longer dependencies. */
+  let sevenDayCoverage={days:[],loading:false,error:null,authorized:false};
+  let teamCoverage={authorized:false,loading:false,error:null,date:'',employees:null,scanned:null,fetchedAt:0};
   function renderChart(){
-    const historyPanel=$('h7-overview-panel');
-    const allowed=!$('app-screen')?.classList.contains('hidden')&&!!historyPanel&&!historyPanel.classList.contains('hidden');
+    const active=!!$('app-screen')&&!$('app-screen').classList.contains('hidden');
+    const sevenAllowed=active&&sevenDayCoverage.authorized;
+    const teamAllowed=active&&teamCoverage.authorized;
     const chart=$('premium-bar-chart'),labels=$('premium-bar-days'),note=$('premium-bar-note');
     const donut=$('premium-donut'),pct=$('premium-covered'),coverageNote=$('premium-coverage-note');
     if(!chart||!labels||!note||!donut||!pct||!coverageNote)return;
-    // Do not derive the chart from the historical-review-only HTML table.
-    // Admin/HR report below merges verified historical + live scanner events.
-    const days=sevenDayCoverage.days;
-    const maxValue=Math.max(1,...days.filter(d=>Number.isFinite(d.covered)).map(d=>d.covered));
+
+    const days=sevenAllowed?sevenDayCoverage.days:[];
+    const verified=days.filter(d=>d&&Number.isInteger(d.covered)&&d.covered>=0);
+    const maxValue=Math.max(1,...verified.map(d=>d.covered));
     chart.replaceChildren();labels.replaceChildren();
     for(let i=0;i<7;i++){
-      const day=days[i],n=day&&Number.isFinite(day.covered)?day.covered:null;
+      const day=days[i],n=day&&Number.isInteger(day.covered)&&day.covered>=0?day.covered:null;
       const col=document.createElement('div');col.className='premium-bar-col';
-      const label=document.createElement('span');label.className='premium-bar-number';label.textContent=n===null?'—':String(n);
+      const label=document.createElement('span');label.className='premium-bar-number';
+      label.textContent=n===null?'—':String(n);
       const bar=document.createElement('span');bar.className='premium-bar';
-      bar.style.setProperty('--bar-height',n===null?'6%':`${Math.max(4,100*n/maxValue)}%`);
+      bar.style.setProperty('--bar-height',n===null?'5%':n===0?'0%':`${Math.max(5,100*n/maxValue)}%`);
       if(n===null)bar.classList.add('premium-bar-unavailable');
       col.append(label,bar);chart.append(col);
       const tick=document.createElement('span');tick.textContent=day?shortDay(day.date):'—';labels.append(tick);
     }
-    note.textContent=!allowed?'7-day scan coverage is available to authorized Admin / HR accounts only.':
-      sevenDayCoverage.loading?'Loading the verified 7-day fingerprint report…':
+    note.textContent=!sevenAllowed?'7-day scan coverage is available to authorized Admin / HR accounts only.':
+      sevenDayCoverage.loading?'Loading verified scanner coverage…':
       sevenDayCoverage.error?sevenDayCoverage.error:
-      days.length===7?'Verified employee IDs with at least one scan per day · live + historical records · not approved IN/OUT.':
+      days.length===7?'Verified employees with at least one scanner record per day · not approved IN/OUT.':
       'Waiting for the authorized 7-day scanner report.';
 
-    const teamPanel=$('team-overview-panel');
-    const teamAllowed=!!teamPanel&&!teamPanel.classList.contains('hidden')&&allowed;
-    const teamFiltered=!!$('team-overview-search')?.value?.trim();
-    const teamRows=teamAllowed&&!teamFiltered?[...($('team-overview-body')?.querySelectorAll('tr')||[])]:[];
-    let withScans=0,parsed=0;
-    for(const row of teamRows){
-      const cells=row.cells;if(cells.length<6)continue;
-      const count=Number.parseInt(cells[4].textContent.trim(),10);
-      if(!Number.isFinite(count))continue;
-      parsed++;if(count>0)withScans++;
-    }
-    const total=valueFrom('team-overview-staff');
-    const valid=teamAllowed&&parsed>0&&Number.isFinite(total)&&total>0;
+    const total=teamCoverage.employees,withScans=teamCoverage.scanned;
+    const valid=teamAllowed&&Number.isInteger(total)&&total>0
+      &&Number.isInteger(withScans)&&withScans>=0&&withScans<=total;
     pct.textContent=valid?`${withScans}/${total}`:'—';
-    donut.style.setProperty('--coverage',valid?`${100*Math.min(withScans,total)/total}%`:'0%');
-    $('premium-scanned-count').textContent=valid?String(withScans):'—';
-    $('premium-no-record-count').textContent=valid?String(Math.max(0,total-withScans)):'—';
-    const date=$('team-overview-date')?.value||'';
+    donut.style.setProperty('--coverage',valid?`${100*withScans/total}%`:'0%');
+    const scannedEl=$('premium-scanned-count'),missingEl=$('premium-no-record-count');
+    if(scannedEl)scannedEl.textContent=valid?String(withScans):'—';
+    if(missingEl)missingEl.textContent=valid?String(total-withScans):'—';
     coverageNote.textContent=!teamAllowed?'Team scan coverage is restricted to Admin / HR.':
-      teamFiltered?'Clear the team employee filter below for complete coverage.':
-      valid?`${shortDay(date)} · At least one recorded scan. No scan record does not establish absence.`:
-      'Waiting for the verified team report. No scan count is assumed.';
+      teamCoverage.loading&&!valid?'Loading verified team scan report…':
+      teamCoverage.error?teamCoverage.error:
+      valid?`${shortDay(teamCoverage.date)} · ${withScans} of ${total} verified staff have a recorded scan. No scan does not prove absence.`:
+      'Verified team report is currently unavailable; no counts are assumed.';
   }
   function setupCharts(){
     document.addEventListener('hris:coverage-7',e=>{
       const d=e.detail||{};
-      sevenDayCoverage={days:Array.isArray(d.days)?d.days:[],loading:!!d.loading,error:d.error||null};
+      sevenDayCoverage={authorized:d.authorized===true,days:Array.isArray(d.days)?d.days:[],
+        loading:!!d.loading,error:d.error||null};
       renderChart();
     });
-    renderChart();
-    for(const id of ['h7-overview-body','team-overview-body']){
-      const el=$(id);if(el)new MutationObserver(renderChart).observe(el,{childList:true});
-    }
-    for(const id of ['h7-overview-panel','team-overview-panel']){
-      const el=$(id);if(el)new MutationObserver(renderChart).observe(el,{attributes:true,attributeFilter:['class']});
-    }
-    $('team-overview-date')?.addEventListener('change',()=>requestAnimationFrame(renderChart));
-    $('h7-overview-date')?.addEventListener('change',()=>requestAnimationFrame(renderChart));
-    $('h7-overview-status')?.addEventListener('change',()=>requestAnimationFrame(renderChart));
-    $('h7-overview-search')?.addEventListener('input',()=>requestAnimationFrame(renderChart));
-    $('team-overview-search')?.addEventListener('input',()=>requestAnimationFrame(renderChart));
+    document.addEventListener('hris:team-coverage',e=>{
+      const d=e.detail||{};
+      teamCoverage={authorized:d.authorized===true,loading:!!d.loading,error:d.error||null,
+        date:typeof d.date==='string'?d.date:'',
+        employees:Number.isInteger(d.employees)?d.employees:null,
+        scanned:Number.isInteger(d.scanned)?d.scanned:null,
+        fetchedAt:Number(d.fetchedAt)||0};
+      renderChart();
+    });
     $('logout-btn')?.addEventListener('click',()=>requestAnimationFrame(renderChart));
-    if($('app-screen'))new MutationObserver(renderChart).observe($('app-screen'),{attributes:true,attributeFilter:['class']});
+    if($('app-screen'))new MutationObserver(renderChart).observe($('app-screen'),
+      {attributes:true,attributeFilter:['class']});
+    renderChart();
   }
   function setupPeoplePreview(){
     const source=$('live-people-body'),target=$('premium-people-body'),filter=$('premium-people-filter');
@@ -148,17 +143,17 @@
     mirror();
   }
   function setupActivityPreview(){
-    const source=$('metric-in');const roster=$('team-overview-staff');
+    const source=$('metric-in');
     const raw=$('premium-raw-scans');const count=$('premium-roster-count');
     function sync(){
       if(!raw||!count)return;
       if($('app-screen')?.classList.contains('hidden')){raw.textContent='—';count.textContent='—';return;}
       raw.textContent=source?.textContent?.trim()||'—';
-      const verified=roster?.textContent?.trim()||'';
-      count.textContent=/^\d+$/.test(verified)?verified:'—';
+      const verified=teamCoverage.authorized?teamCoverage.employees:null;
+      count.textContent=Number.isInteger(verified)&&verified>0?String(verified):'—';
     }
     if(source)new MutationObserver(sync).observe(source,{childList:true,characterData:true,subtree:true});
-    if(roster)new MutationObserver(sync).observe(roster,{childList:true,characterData:true,subtree:true});
+    document.addEventListener('hris:team-coverage',sync);
     $('logout-btn')?.addEventListener('click',()=>requestAnimationFrame(sync));
     if($('app-screen'))new MutationObserver(sync).observe($('app-screen'),{attributes:true,attributeFilter:['class']});
     sync();
