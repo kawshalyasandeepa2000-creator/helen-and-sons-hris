@@ -481,7 +481,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   }
   function showApp(){
     $('auth-screen').classList.add('hidden');$('app-screen').classList.remove('hidden');$('mode-warning')?.classList.add('hidden');
-    $('connection-indicator').innerHTML='<span class="state-dot"></span> Connected · Supabase';$('connection-indicator').classList.add('live');
+    $('connection-indicator').innerHTML='<span class="state-dot"></span> Connected · 10s auto-refresh';$('connection-indicator').classList.add('live');
     const p=state.profile;$('user-avatar').textContent=caps(p.full_name);$('top-user-name').textContent=p.full_name;$('top-user-role').textContent=roleText(p.role);
     const visible=team();
     for(const item of document.querySelectorAll('[data-page]')){
@@ -514,8 +514,13 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     window.HRIS_HR_CORE?.onPageChange(page);
   }
   async function safely(query, label){try{const {data,error}=await query;if(error)throw error;return data||[]}catch(err){console.warn('HRIS query unavailable:',label,err?.message);return [];}}
+  // Share a single in-flight refresh across manual actions and the 10-second poller.
+  let inFlightDataRefresh=null;
   async function loadData(){
     if(!state.client||!state.profile)return;
+    if(inFlightDataRefresh)return inFlightDataRefresh;
+    const requestedBy=state.user?.id;
+    inFlightDataRefresh=(async()=>{
     const c=state.client;
     const requests=[
       safely(c.from('profiles').select('id,email,full_name,department,job_title,role,active,web_clock_enabled').order('full_name'),'profiles'),
@@ -529,6 +534,8 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     if(admin())requests.push(safely(c.from('company_assets').select('id,asset_tag,category,asset_name,identifier,brand,model,status,assigned_to,notes').order('created_at',{ascending:false}).limit(250),'company assets'));
     requests.push(safely(c.from('scanner_employee_links').select('device_key,scanner_user_id,employee_id').eq('employee_id',state.user.id),'my scanner links'));
     const data=await Promise.all(requests);
+    // Ignore stale results if a different person signed in while requests were pending.
+    if(!state.profile||state.user?.id!==requestedBy)return;
     [state.people,state.staff,state.scans,state.daily,state.web,state.leaves,state.corrections]=data;
     state.assets=admin()?data[7]:[];
     state.myScannerLinks=data[admin()?8:7]||[];
@@ -536,6 +543,9 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     state.loaded=true;
     renderCurrent();
     if(manager()){void loadTeamDashboard();} // Hidden full-history widgets no longer poll on every refresh.
+    })();
+    try{return await inFlightDataRefresh;}
+    finally{inFlightDataRefresh=null;}
   }
 
   /* DAILY TEAM FINGERPRINT SUMMARY (ADMIN + HR): no payroll approval, no login linking. */
@@ -1256,7 +1266,15 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     state.client.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'){state.profile=null;state.user=null;resetHistoryDashboard();showLogin();}if(event==='PASSWORD_RECOVERY')location.href='/reset-password.html';});
     await sessionStart();
     setInterval(()=>{if(state.profile){updateClock();if(state.page==='overview')renderOverview();}},1000);
-    setInterval(()=>{if(state.profile&&!state.busy)loadData().catch(e=>console.warn('refresh',e?.message));},60000);
+    // Refresh visible HRIS data every 10s without reloading the browser page.
+    // Pause while hidden, while editing a form, or during a modal; never overlap requests.
+    setInterval(()=>{
+      if(!state.profile||state.busy||document.hidden||inFlightDataRefresh)return;
+      if(document.querySelector('#live-modal:not(.hidden)'))return;
+      const focus=document.activeElement;
+      if(focus?.closest('form')&&focus.matches('input,textarea,select,[contenteditable]'))return;
+      void loadData().catch(e=>console.warn('10-second HRIS refresh:',e?.message));
+    },10000);
   }
   document.addEventListener('DOMContentLoaded',()=>{init().catch(e=>{console.error(e);notify(e?.message||'HRIS could not start',true);showLogin();});});
 })();
