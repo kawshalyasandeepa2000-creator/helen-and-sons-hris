@@ -1,0 +1,314 @@
+/* Helen & Sons HRIS — accessible two-tone brand theme, 21 November 2026.
+   Light: #182147 navy and white. Dark: pure black and white.
+   Visual-only; does not change business logic, auth, scanner sync or records.
+   Loaded after previous theme CSS; dynamic HR Operations UI is overridden by specificity.
+*/
+html[data-theme="light"]{
+  color-scheme:light;
+  --hs-ink:#182147;--hs-muted:#384265;--hs-canvas:#ffffff;--hs-card:#ffffff;
+  --hs-soft:#f3f4f8;--hs-line:rgba(24,33,71,.23);
+  --hs-header:#182147;--hs-sidebar:#182147;
+  --hs-action:#182147;--hs-action-ink:#ffffff;
+  --hs-active:#ffffff;--hs-active-ink:#182147;
+  --hs-input:#ffffff;--hs-input-ink:#182147;
+  --hs-shadow:0 5px 20px rgba(24,33,71,.08);
+  --ink:#182147;--navy:#182147;--dark:#182147;--bg:#ffffff;--white:#ffffff;
+  --line:rgba(24,33,71,.23);--border:rgba(24,33,71,.23);--muted:#384265;
+  --studio-panel:#ffffff;--studio-inner:#f3f4f8;--studio-foreground:#182147;
+  --studio-softtext:#384265;--studio-border:rgba(24,33,71,.23);
+  --card-bg:#ffffff;--panel-bg:#ffffff;--surface:#ffffff;
+  --pb-ink:#182147;--pb-muted:#384265;--pb-navy:#182147;--pb-blue:#182147;
+  --pb-cyan:#182147;--pb-gold:#182147;
+  --pb-card:#ffffff;--pb-shadow:var(--hs-shadow);
+}
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --hs-ink:#ffffff;--hs-muted:#e2e2e2;--hs-canvas:#000000;--hs-card:#000000;
+  --hs-soft:#111111;--hs-line:rgba(255,255,255,.48);
+  --hs-header:#000000;--hs-sidebar:#000000;
+  --hs-action:#ffffff;--hs-action-ink:#000000;
+  --hs-active:#ffffff;--hs-active-ink:#000000;
+  --hs-input:#000000;--hs-input-ink:#ffffff;
+  --hs-shadow:none;
+  --ink:#ffffff;--navy:#ffffff;--dark:#000000;--bg:#000000;--white:#000000;
+  --line:rgba(255,255,255,.48);--border:rgba(255,255,255,.48);--muted:#e2e2e2;
+  --studio-panel:#000000;--studio-inner:#111111;--studio-foreground:#ffffff;
+  --studio-softtext:#e2e2e2;--studio-border:rgba(255,255,255,.48);
+  --card-bg:#000000;--panel-bg:#000000;--surface:#000000;
+  --pb-ink:#ffffff;--pb-muted:#e2e2e2;--pb-navy:#000000;--pb-blue:#ffffff;
+  --pb-cyan:#ffffff;--pb-gold:#ffffff;
+  --pb-card:#000000;--pb-shadow:none;
+}
+/* Canvas: remove bright blue/cyan gradients that previously overrode both modes. */
+html[data-theme] , html[data-theme] body,
+html[data-theme] .app-shell,html[data-theme] .workspace,
+html[data-theme] .page-wrap{
+  background:var(--hs-canvas)!important;background-image:none!important;
+  color:var(--hs-ink)!important;
+}
+html[data-theme] .app-shell{--studio-panel:var(--hs-card);--studio-inner:var(--hs-soft);
+  --studio-foreground:var(--hs-ink);--studio-softtext:var(--hs-muted);
+  --studio-border:var(--hs-line);--studio-shadow:var(--hs-shadow);}
+html[data-theme] .page:not(.hidden){color:var(--hs-ink)!important}
+/* Side navigation and top header: blue/white or black/white. */
+html[data-theme] .sidebar, html[data-theme] .topbar{
+  background:var(--hs-sidebar)!important;background-image:none!important;
+  color:#ffffff!important;border-color:var(--hs-line)!important;box-shadow:none!important;
+}
+html[data-theme] .topbar{background:var(--hs-header)!important;border-bottom:1px solid rgba(255,255,255,.25)!important}
+html[data-theme] .sidebar .brand-wordmark,
+html[data-theme] .sidebar .brand-wordmark small,
+html[data-theme] .sidebar .side-group-label,
+html[data-theme] .sidebar .logout-btn,
+html[data-theme] .sidebar .nav-item:not(.active),
+html[data-theme] .topbar .top-user :is(strong,small),
+html[data-theme] .topbar .server-state,
+html[data-theme] .topbar .theme-option,
+html[data-theme] .topbar .notification-bell{color:#ffffff!important}
+html[data-theme] .sidebar .nav-item:hover:not(.active){background:rgba(255,255,255,.15)!important;border-color:rgba(255,255,255,.35)!important}
+html[data-theme] .sidebar .nav-item.active{
+  background:var(--hs-active)!important;background-image:none!important;
+  color:var(--hs-active-ink)!important;border:1px solid #ffffff!important;
+  box-shadow:none!important;
+}
+html[data-theme] .sidebar .nav-count{
+  background:#ffffff!important;color:var(--hs-sidebar)!important;
+  border:1px solid #ffffff!important;
+}
+html[data-theme] .sidebar .side-hint,
+html[data-theme] .topbar .server-state,
+html[data-theme] .topbar .notification-bell,
+html[data-theme] .topbar .theme-switch{
+  background:rgba(255,255,255,.09)!important;border-color:rgba(255,255,255,.45)!important;
+}
+html[data-theme] .topbar .theme-option.is-selected{
+  background:#ffffff!important;color:var(--hs-header)!important;box-shadow:none!important;
+}
+html[data-theme] .topbar .account-circle{
+  background:#ffffff!important;background-image:none!important;color:var(--hs-header)!important;
+}
+html[data-theme] .topbar .state-dot{background:#ffffff!important}
+html[data-theme] .topbar .separator{background:rgba(255,255,255,.4)!important}
+html[data-theme] .premium-search-wrap .premium-search-shell{
+  background:transparent!important;background-image:none!important;
+  border-color:rgba(255,255,255,.62)!important;box-shadow:none!important;
+}
+html[data-theme] .premium-search-shell input{color:#ffffff!important;background:transparent!important}
+html[data-theme] .premium-search-shell input::placeholder{color:rgba(255,255,255,.84)!important}
+html[data-theme] .premium-search-shell svg{stroke:#ffffff!important}
+html[data-theme] .premium-key{color:#ffffff!important;border-color:rgba(255,255,255,.5)!important}
+html[data-theme] .premium-search-results{
+  color:var(--hs-ink)!important;background:var(--hs-card)!important;
+  border:1px solid var(--hs-line)!important;
+}
+html[data-theme] .premium-search-results :is(button,p){color:var(--hs-ink)!important}
+html[data-theme] .premium-search-results button:hover{background:var(--hs-soft)!important}
+/* Readable page headings: the screenshot previously showed navy lettering on blue. */
+html[data-theme] .page-heading h1,
+html[data-theme] #page-overview .page-heading h1,
+html[data-theme] #page-hr-core .page-heading h1,
+html[data-theme] #page-breaks .break-heading h1,
+html[data-theme] .page-heading .eyebrow,
+html[data-theme] #page-overview .page-heading .eyebrow,
+html[data-theme] .page-heading p,
+html[data-theme] #page-overview .page-heading p{
+  color:var(--hs-ink)!important;text-shadow:none!important;
+}
+html[data-theme] .page-heading .eyebrow,
+html[data-theme] #page-overview .page-heading .eyebrow{opacity:.87}
+/* Main cards and summary tiles always own an explicit foreground/background pair. */
+html[data-theme] .page .panel,
+html[data-theme] .page .h7-main-panel,
+html[data-theme] .page .h7-stat,
+html[data-theme] .page .asset-stat,
+html[data-theme] .page .premium-analytics-card,
+html[data-theme] #page-overview .metric-grid .metric-card,
+html[data-theme] #page-overview .metric-grid .metric-card:nth-child(2),
+html[data-theme] #page-overview .overview-shortcut,
+html[data-theme] #page-overview .premium-activity-item{
+  background:var(--hs-card)!important;background-image:none!important;
+  color:var(--hs-ink)!important;border:1px solid var(--hs-line)!important;
+  box-shadow:var(--hs-shadow)!important;
+}
+html[data-theme] .page .panel :is(h2,h3,h4,strong),
+html[data-theme] #page-overview .metric-grid .metric-card :is(.metric-title,strong,small),
+html[data-theme] #page-overview .metric-grid .metric-card:nth-child(2) :is(.metric-title,strong,small),
+html[data-theme] #page-overview .overview-shortcut :is(strong,small,.shortcut-arrow),
+html[data-theme] .page .h7-stat strong,
+html[data-theme] .page .h7-stat small,
+html[data-theme] .page .premium-analytics-card :is(h2,h3,strong,span),
+html[data-theme] .premium-activity-item :is(strong,small),
+html[data-theme] .premium-activity-meta,
+html[data-theme] .asset-stat :is(strong,span){
+  color:var(--hs-ink)!important;
+}
+html[data-theme] .page .panel p,
+html[data-theme] .page .panel .section-helper,
+html[data-theme] .page .panel small,
+html[data-theme] .page .h7-panel-header p,
+html[data-theme] .page .h7-footer,
+html[data-theme] .premium-analytics-card :is(p,small),
+html[data-theme] .premium-data-note,
+html[data-theme] .premium-activity-notice,
+html[data-theme] .asset-muted,
+html[data-theme] .asset-table-small,
+html[data-theme] .td-note,
+html[data-theme] .page .form-hint{
+  color:var(--hs-muted)!important;opacity:1!important;
+}
+html[data-theme] .page .panel-kicker,
+html[data-theme] .page .eyebrow,
+html[data-theme] .page .panel-eyebrow{color:var(--hs-ink)!important}
+/* HR Operations: fix blank white metrics and unreadable labels in screenshot. */
+html[data-theme] #page-hr-core .hrc-stat,
+html[data-theme] #page-hr-core .hrc-panel{
+  background:var(--hs-card)!important;color:var(--hs-ink)!important;
+  border:1px solid var(--hs-line)!important;box-shadow:var(--hs-shadow)!important;
+}
+html[data-theme] #page-hr-core .hrc-stat :is(small,strong),
+html[data-theme] #page-hr-core .hrc-panel :is(h3,p,label,small,strong,span),
+html[data-theme] #page-hr-core .hrc-table-label,
+html[data-theme] #page-hr-core .hrc-note{
+  color:var(--hs-ink)!important;opacity:1!important;
+}
+html[data-theme] #page-hr-core .hrc-stat small,
+html[data-theme] #page-hr-core .hrc-note{color:var(--hs-muted)!important}
+html[data-theme] #page-hr-core .hrc-alert{
+  background:var(--hs-soft)!important;color:var(--hs-ink)!important;
+  border-left:4px solid var(--hs-ink)!important;
+}
+html[data-theme] #page-hr-core .hrc-tbl,
+html[data-theme] #page-hr-core .hrc-tbl td,
+html[data-theme] #page-hr-core .hrc-tbl th{
+  color:var(--hs-ink)!important;border-color:var(--hs-line)!important;
+}
+html[data-theme] #page-hr-core .hrc-tbl th{background:var(--hs-soft)!important}
+/* Data tables, badges and form elements */
+html[data-theme] .page :is(.table-scroll,.h7-table-viewport){border-color:var(--hs-line)!important}
+html[data-theme] .page table{background:var(--hs-card)!important}
+html[data-theme] .page thead,
+html[data-theme] .page .h7-table-viewport thead,
+html[data-theme] .page th{
+  background:var(--hs-soft)!important;color:var(--hs-ink)!important;
+}
+html[data-theme] .page td,
+html[data-theme] .page .h7-table-viewport td,
+html[data-theme] .page .h7-table-viewport th,
+html[data-theme] .page .h7-table-viewport small{
+  color:var(--hs-ink)!important;border-color:var(--hs-line)!important;
+}
+html[data-theme] .page tbody tr:hover{background:var(--hs-soft)!important}
+html[data-theme] .page :is(.subtle-badge,.h7-status,.h7-review,.asset-status-pill,.break-tag){
+  background:var(--hs-soft)!important;color:var(--hs-ink)!important;
+  border:1px solid var(--hs-line)!important;
+}
+html[data-theme] .page :is(input:not([type="checkbox"]),select,textarea),
+html[data-theme] #page-hr-core .hrc-fields :is(input,select),
+html[data-theme] #live-modal :is(input,select,textarea),
+html[data-theme] .auth-form-panel input{
+  background:var(--hs-input)!important;background-image:none!important;
+  color:var(--hs-input-ink)!important;border:1px solid var(--hs-line)!important;
+}
+html[data-theme] :is(input,textarea)::placeholder{color:var(--hs-muted)!important;opacity:1!important}
+html[data-theme] .page :is(label,.filters label,.asset-filter span),
+html[data-theme] .stack-form label{color:var(--hs-ink)!important}
+html[data-theme] :is(input,select,textarea,button,a):focus-visible{
+  outline:2px solid var(--hs-ink)!important;outline-offset:2px!important;
+}
+/* Buttons: foreground always contrasts with the actual background. */
+html[data-theme] :is(.btn-primary,.btn-success,.btn-approve),
+html[data-theme] #page-breaks .break-main-button,
+html[data-theme] #page-breaks .break-tab.current{
+  background:var(--hs-action)!important;background-image:none!important;
+  color:var(--hs-action-ink)!important;border:1px solid var(--hs-line)!important;
+  box-shadow:none!important;
+}
+html[data-theme] :is(.btn-outline,.btn-dark,.btn-danger-outline,.table-action),
+html[data-theme] #page-breaks .break-tab,
+html[data-theme] #page-hr-core #hrc-reload,
+html[data-theme] #page-hr-core #hrc-export{
+  background:var(--hs-card)!important;background-image:none!important;
+  color:var(--hs-ink)!important;border:1px solid var(--hs-line)!important;
+  box-shadow:none!important;
+}
+html[data-theme] .page :is(.workflow-counts>div,.leave-summary-grid>div,.leave-balance-grid>div,.correction-totals>div,.punch-grid,.info-panel,.leave-help,.form-hint,.terminal-entry,.scanner-link-panel),
+html[data-theme] .page .studio-utility-stack>button{
+  background:var(--hs-soft)!important;background-image:none!important;
+  color:var(--hs-ink)!important;border-color:var(--hs-line)!important;
+}
+html[data-theme] .page :is(.workflow-counts strong,.studio-utility-stack strong,.studio-utility-stack small,.scanner-link-panel strong,.scanner-link-panel span,.scanner-link-panel p,.info-panel p){
+  color:var(--hs-ink)!important;
+}
+html[data-theme] .page .asset-type-icon,
+html[data-theme] #page-overview .metric-card .card-symbol,
+html[data-theme] #page-overview .overview-shortcut .shortcut-icon,
+html[data-theme] .premium-activity-icon{
+  background:var(--hs-soft)!important;background-image:none!important;color:var(--hs-ink)!important;
+}
+/* Charts/visual accents have a single theme-colored mark, never cyan/gold gradients. */
+html[data-theme] .premium-bar,
+html[data-theme] .premium-bar-col:last-child .premium-bar{
+  background:var(--hs-ink)!important;background-image:none!important;
+}
+html[data-theme] .premium-bar-number,
+html[data-theme] .premium-chart-heading h2,
+html[data-theme] .premium-chart-heading p,
+html[data-theme] .premium-legend-row,
+html[data-theme] .premium-legend-row strong,
+html[data-theme] .premium-coverage-legend,
+html[data-theme] .premium-period,
+html[data-theme] .premium-chart-days>span,
+html[data-theme] .premium-donut-core :is(strong,small){
+  color:var(--hs-ink)!important;
+}
+html[data-theme] .premium-donut{background:conic-gradient(var(--hs-ink) 0 var(--coverage),var(--hs-soft) var(--coverage) 100%)!important}
+html[data-theme] .premium-donut-core,
+html[data-theme] .premium-period{
+  background:var(--hs-card)!important;border-color:var(--hs-line)!important;
+}
+html[data-theme] .premium-legend-dot,
+html[data-theme] .premium-legend-row.missing .premium-legend-dot{
+  background:var(--hs-ink)!important;
+}
+html[data-theme] .premium-legend-row.missing .premium-legend-dot{opacity:.25}
+/* QR/NFC Break Management and HR change review */
+html[data-theme] #page-breaks :is(.break-stat,.break-progress-shell,.break-scan-panel,.break-history,.break-admin-tools),
+html[data-theme] #page-breaks :is(.break-confirm,.break-pill){
+  background:var(--hs-card)!important;background-image:none!important;
+  color:var(--hs-ink)!important;border:1px solid var(--hs-line)!important;
+}
+html[data-theme] #page-breaks :is(h2,h3,strong,small,p,.break-live-timer,.break-stat span,.break-section-head p,.break-emp-button){
+  color:var(--hs-ink)!important;
+}
+html[data-theme] #page-breaks .break-track{background:var(--hs-soft)!important}
+html[data-theme] #page-breaks .break-track span{background:var(--hs-ink)!important}
+html[data-theme] #page-breaks .break-tab.current{
+  background:var(--hs-action)!important;color:var(--hs-action-ink)!important;
+}
+/* Modal and auth: preserve contrast for light and dark, including legacy recovery screens. */
+html[data-theme] #live-modal .modal,
+html[data-theme] .auth-form-panel{
+  background:var(--hs-card)!important;background-image:none!important;
+  color:var(--hs-ink)!important;border-color:var(--hs-line)!important;
+}
+html[data-theme] #live-modal .modal :is(h2,h3,strong,label,p),
+html[data-theme] .auth-form-panel :is(h1,h2,h3,label,p,.subheading,.auth-footer){
+  color:var(--hs-ink)!important;
+}
+html[data-theme] .auth-layout{background:var(--hs-canvas)!important;background-image:none!important}
+html[data-theme] .auth-brand{
+  background:var(--hs-sidebar)!important;background-image:none!important;color:#ffffff!important;
+}
+html[data-theme] .auth-brand :is(h1,h2,p,span,.brand-message h1 em){color:#ffffff!important}
+html[data-theme] .workspace-footer{
+  background:var(--hs-header)!important;color:#ffffff!important;border-color:rgba(255,255,255,.3)!important;
+}
+html[data-theme] .workspace-footer :is(span,small,a){color:#ffffff!important}
+html[data-theme] .toast.show{
+  background:var(--hs-card)!important;color:var(--hs-ink)!important;border:1px solid var(--hs-line)!important;
+}
+/* Never hide content merely to satisfy a color preference. */
+@media(max-width:600px){
+ html[data-theme] #page-hr-core .hrc-grid{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+ html[data-theme] .page-heading{flex-wrap:wrap}
+}
