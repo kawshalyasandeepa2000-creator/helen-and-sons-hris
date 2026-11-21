@@ -543,7 +543,10 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     if(!state.people.some(p=>p.id===state.profile.id))state.people.push(state.profile);
     state.loaded=true;
     renderCurrent();
-    if(manager()){void loadTeamDashboard();} // Hidden full-history widgets no longer poll on every refresh.
+    if(manager()){
+      void loadTeamDashboard();
+      void loadSevenDayCoverage(); // 3-minute cache; does not refetch on each 10s UI refresh.
+    } // Removed all-staff/history HTML panels remain unmounted.
     })();
     try{return await inFlightDataRefresh;}
     finally{inFlightDataRefresh=null;}
@@ -576,6 +579,21 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     ov.insertAdjacentHTML('afterend',makeTeamPanel('overview'));
     at.insertAdjacentHTML('afterend',makeTeamPanel('attendance'));
   }
+  /* Event-based chart summary: independent of the removed duplicate team HTML panel. */
+  function publishTeamCoverage(){
+    const authorized=!!state.profile&&manager();
+    const d=authorized&&state.teamData?.date===state.teamDate?state.teamData:null;
+    const rows=Array.isArray(d?.rows)?d.rows:[];
+    const employees=Number(d?.employees),scanned=rows.filter(r=>Number(r.count)>0).length;
+    const valid=!!d&&Number.isInteger(employees)&&employees>0&&rows.length===employees
+      &&rows.every(r=>Number.isInteger(Number(r.count))&&Number(r.count)>=0);
+    document.dispatchEvent(new CustomEvent('hris:team-coverage',{detail:{
+      authorized,date:state.teamDate,loading:authorized&&state.teamLoading,
+      error:authorized?(state.teamError||(d&&!valid?'Invalid team coverage report':null)):null,
+      employees:valid?employees:null,scanned:valid?scanned:null,
+      fetchedAt:valid?state.teamFetchedAt:0
+    }}));
+  }
   function resetTeamDashboard(){
     state.teamData=null;state.teamError=null;state.teamFetchedAt=0;state.teamLoading=false;state.teamDate=DAY();
     for(const scope of teamScopes){
@@ -583,6 +601,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
       const body=$(`team-${scope}-body`);if(body)body.innerHTML='<tr><td colspan="6">Awaiting authorized HR sign-in.</td></tr>';
       const date=$(`team-${scope}-date`);if(date)date.value=state.teamDate;
     }
+    publishTeamCoverage();
   }
   function showTeamDashboardVisibility(){
     for(const scope of teamScopes)$(`team-${scope}-panel`)?.classList.toggle('hidden',!manager());
@@ -609,11 +628,15 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     body.innerHTML=rows.map(r=>`<tr><td><strong>${html(r.name)}</strong><small>${html(r.employee_code)} · Scanner ID ${html(r.scanner_user_id)}</small></td>
       <td>${html(r.date)}</td><td>${html(r.first||'—')}</td><td>${html(r.last||'—')}</td><td>${Number(r.count)||0}</td><td><span class="h7-status">${html(r.status)}</span></td></tr>`).join('')||'<tr><td colspan="6" class="h7-loading">No matching staff.</td></tr>';
   }
-  function renderBothTeamDashboards(){for(const scope of teamScopes)renderTeamDashboard(scope);}
+  function renderBothTeamDashboards(){for(const scope of teamScopes)renderTeamDashboard(scope);publishTeamCoverage();}
   async function loadTeamDashboard(force=false){
     if(!manager()||!state.client||state.teamLoading)return;
+    // There is no longer an interactive team-date control; keep the chart on today's UAE date.
+    if(!$('team-overview-date')&&state.teamDate!==DAY()){
+      state.teamDate=DAY();state.teamData=null;state.teamFetchedAt=0;
+    }
     if(!force&&state.teamData&&state.teamData.date===state.teamDate&&Date.now()-state.teamFetchedAt<45000)return;
-    state.teamLoading=true;state.teamError=null;
+    state.teamLoading=true;state.teamError=null;publishTeamCoverage();
     const uid=state.user?.id,requestedDate=state.teamDate;
     try{
       const {data,error}=await state.client.functions.invoke('hris-team-attendance',{body:{action:'report',date:requestedDate}});
@@ -621,7 +644,7 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
       if(!data?.ok||!Array.isArray(data.rows))throw Error(data?.error||'Invalid team attendance response');
       if(!manager()||state.user?.id!==uid||state.teamDate!==requestedDate)return;
       state.teamData=data;state.teamFetchedAt=Date.now();
-    }catch(e){state.teamError=e?.message||'Unable to load team attendance';console.warn('Team attendance:',state.teamError);}
+    }catch(e){state.teamError=e?.message||'Unable to load team attendance';state.teamData=null;console.warn('Team attendance:',state.teamError);}
     finally{state.teamLoading=false;renderBothTeamDashboards();}
   }
   function downloadTeamCsv(){
@@ -736,8 +759,8 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
   };
   function publishSevenDayCoverage(){
     document.dispatchEvent(new CustomEvent('hris:coverage-7',{detail:{
-      days:state.coverage7?.days||[],loading:state.coverageLoading,
-      error:state.coverageError||null
+      authorized:!!state.profile&&manager(),days:manager()?state.coverage7?.days||[]:[],loading:state.coverageLoading&&manager(),
+      error:manager()?state.coverageError||null:null
     }}));
   }
   async function loadSevenDayCoverage(force=false){
@@ -1203,7 +1226,15 @@ html[data-theme="dark"] .h7-status,html[data-theme="dark"] .h7-review{color:#f9c
     if(button.id==='mobile-menu-toggle'){navMenu(true);return;}
     if(button.id==='mobile-menu-close'||button.id==='mobile-nav-backdrop'){navMenu(false);return;}
     if(button.dataset.page){e.preventDefault();switchPage(button.dataset.page);return;}
-    if(button.matches('[data-refresh]')){e.preventDefault();await actionBusy(async()=>{await loadData();notify('Latest Supabase data loaded.');});return;}
+    if(button.matches('[data-refresh]')){
+      e.preventDefault();
+      await actionBusy(async()=>{
+        await loadData();
+        if(manager())await Promise.all([loadTeamDashboard(true),loadSevenDayCoverage(true)]);
+        const partial=manager()&&!!(state.teamError||state.coverageError);
+        notify(partial?'HRIS updated, but a scanner report is unavailable. See chart for details.':'Latest Supabase and scanner dashboard data refreshed.',partial);
+      });return;
+    }
     if(button.id==='logout-btn'){await state.client?.auth.signOut();state.user=null;state.profile=null;resetHistoryDashboard();showLogin();return;}
     if(button.id==='forgot-link'){showLogin('forgot');return;}
     if(button.hasAttribute('data-back-login')){showLogin();return;}
